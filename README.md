@@ -1,28 +1,39 @@
 # RTL Chat
 
 A Firefox extension that gives Arabic, Persian, Hebrew and Urdu text the right direction
-on AI chat sites.
+on sites that lay everything out left-to-right.
 
-Chat sites lay everything out left-to-right: Arabic paragraphs hug the left edge, list
-numbers sit on the wrong side, and the composer starts from the left. RTL Chat fixes
-that per paragraph, by the language most of the paragraph is written in: an Arabic
-paragraph goes right-to-left even when it opens with a word like "JavaScript", and an
-English one in the same reply stays left-to-right. Code and math always stay
-left-to-right, and the site's own navigation is left alone.
+On such a site, Arabic paragraphs hug the left edge, list numbers sit on the wrong side,
+and a text box starts from the left. RTL Chat fixes that per paragraph, by the language
+most of the paragraph is written in: an Arabic paragraph goes right-to-left even when it
+opens with a word like "JavaScript", and an English one beside it stays left-to-right.
+Code and math always stay left-to-right, and the site's own navigation is left alone.
 
 ## Sites
 
-Works out of the box on ChatGPT and Claude.
+ChatGPT and Claude are supported from the start, with nothing to set up.
 
 On any other site, open the popup and choose **Enable on this site**. Firefox asks for
-access to that one site; **Remove this site** gives it back.
+access to that one site, and the site stays enabled until you choose **Remove this
+site**, which gives the access back. RTL Chat does nothing on a site that was not
+enabled.
+
+Firefox's own settings can also give an extension access to all websites, on its
+Permissions tab in `about:addons`. If you switch that on, RTL Chat works on every site
+and the popup says where the access came from. Each site can still be switched off on
+its own.
+
+A site you enable gets the general rules; nothing in RTL Chat is written for it in
+particular. How well they fit depends on how the site is built. RTL Chat is tested on
+ChatGPT and Claude and does not claim to work on every site.
 
 ## Modes
 
 - **Automatic** — each paragraph, list and table follows the language it is written in.
-- **Always right-to-left** — every message is right-to-left whatever its language.
+- **Always right-to-left** — all text is right-to-left whatever its language.
 
-Each site can be switched off from the popup.
+The mode is chosen per site, and each site can be switched off on its own from the
+popup.
 
 ## Privacy
 

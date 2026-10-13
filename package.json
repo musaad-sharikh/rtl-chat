@@ -1,7 +1,7 @@
 {
   "name": "rtl-chat",
   "version": "1.0.0",
-  "description": "Firefox extension that fixes right-to-left text direction on AI chat sites",
+  "description": "Firefox extension that fixes right-to-left text direction on websites",
   "private": true,
   "license": "MIT",
   "scripts": {
