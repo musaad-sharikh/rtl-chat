@@ -9,7 +9,7 @@
   const R = globalThis.RTLChat;
   const site = R.findSite(location.hostname);
 
-  let currentCss = null;
+  let currentSheets = [];
   let mode = "auto";
   let observer = null;
   // Nodes whose surroundings need another look, and new nodes to look inside too.
@@ -81,17 +81,17 @@
     added = new Set();
   };
 
-  const setCss = async (css) => {
-    if (css === currentCss) return;
-    await browser.runtime.sendMessage({ type: "rtl-chat:css", remove: currentCss, insert: css });
-    currentCss = css;
+  const setSheets = async (sheets) => {
+    if (JSON.stringify(sheets) === JSON.stringify(currentSheets)) return;
+    await browser.runtime.sendMessage({ type: "rtl-chat:css", remove: currentSheets, insert: sheets });
+    currentSheets = sheets;
   };
 
   const refresh = async () => {
     const settings = R.normalizeSettings(await browser.storage.sync.get(null));
     const enabled = R.isEnabled(settings, location.hostname);
 
-    await setCss(enabled ? R.buildCss(site, settings.mode) : null);
+    await setSheets(enabled ? R.buildSheets(site, settings.mode) : []);
 
     if (enabled) {
       mode = settings.mode;
@@ -124,7 +124,7 @@
     queue = queue.then(async () => {
       stopObserver();
       R.clearAll(document);
-      await setCss(null);
+      await setSheets([]);
       globalThis.__rtlChatStarted = false;
     });
     return queue;

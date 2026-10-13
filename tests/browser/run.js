@@ -110,7 +110,7 @@ const main = async () => {
 
   const failed = outcome.filter((result) => !result.pass);
   for (const result of outcome) {
-    console.log(`${result.pass ? "ok  " : "FAIL"} ${result.name}${result.pass || !result.detail ? "" : ` (${result.detail})`}`);
+    console.log(`${result.pass ? "ok  " : "FAIL"} ${result.name}${result.detail ? ` (${result.detail})` : ""}`);
   }
   console.log(`\n${outcome.length - failed.length}/${outcome.length} browser checks passed`);
   return failed.length ? 1 : 0;

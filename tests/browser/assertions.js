@@ -39,17 +39,21 @@ globalThis.browser = {
     },
   },
   runtime: {
-    // What background.js does with scripting.insertCSS / removeCSS.
+    // What background.js does with scripting.insertCSS / removeCSS. A page cannot
+    // insert a user-origin sheet, so that one goes in a cascade layer: like the user
+    // origin, a layer outranks the browser's stylesheet and yields to the page's
+    // unlayered rules.
     sendMessage: async (message) => {
-      if (message.remove && styles.has(message.remove)) {
-        styles.get(message.remove).remove();
-        styles.delete(message.remove);
+      for (const { css } of message.remove) {
+        if (!styles.has(css)) throw new Error("removing a stylesheet that was never inserted");
+        styles.get(css).remove();
+        styles.delete(css);
       }
-      if (message.insert) {
+      for (const { css, origin } of message.insert) {
         const style = document.createElement("style");
-        style.textContent = message.insert;
+        style.textContent = origin === "USER" ? `@layer rtl-chat-user { ${css} }` : css;
         document.head.append(style);
-        styles.set(message.insert, style);
+        styles.set(css, style);
       }
     },
     onMessage: {
@@ -84,7 +88,7 @@ const run = async () => {
   await frames(4);
 
   // Automatic mode
-  check("auto: malformed settings still start the extension", styles.size === 1, `styles=${styles.size}`);
+  check("auto: malformed settings still start the extension", styles.size === 2, `styles=${styles.size}`);
   check("auto: Arabic paragraph is on the right", textSide($("p-ar")) === "right");
   check("auto: English paragraph stays on the left", textSide($("p-en")) === "left");
   check("auto: paragraph starting in Arabic is on the right", textSide($("p-ar-mixed")) === "right");
@@ -109,6 +113,7 @@ const run = async () => {
   check("auto: a right-to-left table the site set up gets its headers on the right", textSide($("rtl-site-th")) === "right");
   const nativeList = getComputedStyle($("rtl-site-list"));
   check("auto: a right-to-left list the site set up is indented on the right too", parseFloat(nativeList.paddingRight) > 0 && parseFloat(nativeList.paddingLeft) === 0, `left=${nativeList.paddingLeft} right=${nativeList.paddingRight}`);
+  check("auto: an item the site centred stays centred", getComputedStyle($("li-centered")).textAlign === "center");
   check("auto: English list stays ltr", direction($("list-en")) === "ltr");
   check("auto: English list keeps the site's indent", getComputedStyle($("list-en")).paddingLeft === "30px");
   check("auto: English list item text is on the left", textSide($("li-en")) === "left");
@@ -204,7 +209,7 @@ const run = async () => {
 
   // Forced RTL
   await setSettings({ mode: "rtl", disabled: [] });
-  check("rtl: one stylesheet is active", styles.size === 1, `styles=${styles.size}`);
+  check("rtl: both stylesheets are active, and no stale one", styles.size === 2, `styles=${styles.size}`);
   check("rtl: English paragraph is rtl", direction($("p-en")) === "rtl");
   check("rtl: English paragraph text is on the right", textSide($("p-en")) === "right");
   check("rtl: English list is rtl", direction($("list-en")) === "rtl");
@@ -218,6 +223,7 @@ const run = async () => {
   check("rtl: a paragraph the site centred stays centred", getComputedStyle($("p-centered")).textAlign === "center");
   check("rtl: a list without markers is not indented", getComputedStyle($("list-layout")).paddingRight === "0px");
   check("rtl: an English list is indented on the right", parseFloat(getComputedStyle($("list-en")).paddingRight) > 0 && parseFloat(getComputedStyle($("list-en")).paddingLeft) === 0);
+  check("rtl: an item the site centred stays centred", getComputedStyle($("li-centered")).textAlign === "center");
   check("rtl: composer is rtl", direction($("composer")) === "rtl");
   check("rtl: dir attributes from automatic mode are gone", !$("list-ar").hasAttribute("dir"));
   check("rtl: the list's own dir is back", $("list-own-dir").getAttribute("dir") === "ltr");
@@ -245,6 +251,41 @@ const run = async () => {
   await frames();
   check("stop: no stylesheet is left", styles.size === 0, `styles=${styles.size}`);
   check("stop: no element is still marked", document.querySelectorAll("[data-rtl-chat], [data-rtl-chat-indent]").length === 0);
+
+  // Cost on a long conversation, at its worst: Arabic on a left-to-right page, where
+  // every paragraph and list has to be given a direction. The bounds are loose; the
+  // measured times are printed with the result.
+  const R = globalThis.RTLChat;
+  const long = document.createElement("div");
+  for (let i = 0; i < 2000; i++) {
+    const p = document.createElement("p");
+    p.textContent = "فقرة عربية طويلة نسبياً تحتوي على كلمات مثل JavaScript و API داخلها، رقم " + i;
+    long.append(p);
+    if (i % 10 === 0) {
+      const ul = document.createElement("ul");
+      ul.innerHTML = "<li>عنصر أول في القائمة</li><li>عنصر ثانٍ</li><li>API عنصر ثالث</li>";
+      long.append(ul);
+    }
+  }
+  $("chat").append(long);
+  let started = performance.now();
+  R.applyAll(long, R.GENERIC_SITE, "auto");
+  getComputedStyle(long.lastElementChild).direction;
+  const firstPass = performance.now() - started;
+  const marked = long.querySelectorAll("[data-rtl-chat]").length;
+  check("cost: a first pass over 2000 paragraphs and 200 lists stays under 500 ms", firstPass < 500 && marked === 2200, `${firstPass.toFixed(0)} ms, ${marked} elements given a direction`);
+
+  // One streamed chunk: the paragraph it lands in and what surrounds it are judged again.
+  const streamed = long.lastElementChild.firstChild;
+  started = performance.now();
+  for (let i = 0; i < 300; i++) {
+    streamed.data += " كلمة";
+    for (const el of R.targetsAround(streamed, R.GENERIC_SITE)) R.settle(el, "auto");
+  }
+  const perChunk = (performance.now() - started) / 300;
+  check("cost: a streamed chunk at the end of that conversation stays under 2 ms", perChunk < 2, `${perChunk.toFixed(3)} ms per chunk`);
+  R.clearAll(long);
+  long.remove();
 };
 
 const report = async (error) => {

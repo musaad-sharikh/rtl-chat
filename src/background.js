@@ -12,8 +12,12 @@ browser.runtime.onMessage.addListener((message, sender) => {
 
   const target = { tabId: sender.tab.id, frameIds: [sender.frameId] };
   return (async () => {
-    if (message.remove) await browser.scripting.removeCSS({ target, css: message.remove });
-    if (message.insert) await browser.scripting.insertCSS({ target, css: message.insert });
+    for (const { css, origin } of message.remove) {
+      await browser.scripting.removeCSS({ target, css, origin });
+    }
+    for (const { css, origin } of message.insert) {
+      await browser.scripting.insertCSS({ target, css, origin });
+    }
   })();
 });
 

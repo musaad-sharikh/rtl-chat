@@ -99,20 +99,18 @@
 
   const is = (selectors) => `:is(${selectors.join(", ")})`;
 
+  // Outside the site's chrome and outside code.
+  const guardFor = (site) =>
+    `:not(${is([...CHROME, ...site.exclude])} *):not(${is(LTR)}):not(${is(LTR)} *)`;
+
+  // Rules that must win over the site's own.
   R.buildCss = (site, mode) => {
-    const outsideChrome = `:not(${is([...CHROME, ...site.exclude])} *)`;
-    const outsideLtr = `:not(${is(LTR)}):not(${is(LTR)} *)`;
-    const guard = outsideChrome + outsideLtr;
+    const guard = guardFor(site);
     // Sites pin header cells to the left; in a right-to-left table they belong on
     // the right. Everything else keeps the alignment the site chose, so a centred
     // heading stays centred. A cell the author aligned (a markdown table's :---:)
     // keeps that too.
     const cells = `table:dir(rtl) :is(td, th):not([align]):not([style*="text-align"])${guard} { text-align: start !important; }`;
-    // A list item resolves its alignment against its parent (text-align: match-parent)
-    // and hands the result down as a fixed side, which would pin a right-to-left
-    // paragraph inside it to the left. This makes the item pass down "start" instead;
-    // an element with an alignment of its own is not affected.
-    const itemAlign = `li${guard} { text-align: start !important; }`;
     // syncIndent marks the lists whose indent sits on the wrong side.
     const listIndent = `[${INDENT}] { padding-inline: 1.75em 0 !important; }`;
     const ltr = `${is(LTR)} { direction: ltr !important; unicode-bidi: isolate !important; text-align: left !important; }`;
@@ -125,7 +123,6 @@
       return [
         `${forced}, :is(li:not(${STRUCTURAL} > li), td, th)${guard} { direction: rtl !important; }`,
         cells,
-        itemAlign,
         listIndent,
         ltr,
       ].join("\n");
@@ -133,7 +130,6 @@
 
     return [
       cells,
-      itemAlign,
       listIndent,
       // A field the site emptied without a keystroke shows its placeholder the way
       // the site laid it out, not the way the last message ran.
@@ -142,7 +138,23 @@
     ].join("\n");
   };
 
+  // A list item resolves its alignment against its parent (text-align: match-parent)
+  // and hands the result down as a fixed side, which pins a right-to-left paragraph
+  // inside it to the left. This makes the item pass down "start" instead. It goes in
+  // with the user origin, where it outranks the browser's stylesheet and yields to
+  // every rule of the site: an item the site aligned keeps that alignment.
+  R.buildUserCss = (site) => `li${guardFor(site)} { text-align: start; }`;
+
+  // The stylesheets a page gets, each with the origin it is inserted under.
+  R.buildSheets = (site, mode) => [
+    { origin: "AUTHOR", css: R.buildCss(site, mode) },
+    { origin: "USER", css: R.buildUserCss(site) },
+  ];
+
+  const selectorCache = new WeakMap();
+
   const selectorsFor = (site) => {
+    if (selectorCache.has(site)) return selectorCache.get(site);
     const s = {
       blocks: [...BLOCK, ...site.text].join(", "),
       containers: CONTAINER.join(", "),
@@ -151,6 +163,7 @@
       ltr: LTR.join(", "),
     };
     s.all = `${s.blocks}, ${s.containers}, ${s.inputs}`;
+    selectorCache.set(site, s);
     return s;
   };
 

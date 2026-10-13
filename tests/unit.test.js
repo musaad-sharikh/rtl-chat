@@ -121,6 +121,14 @@ test("buildCss leaves labelled lists alone when it forces a direction", () => {
   assert.match(R.buildCss(R.GENERIC_SITE, "rtl"), /:is\(ul, ol\)\[aria-label\]/);
 });
 
+test("the list-item alignment goes in under the user origin, without !important", () => {
+  const sheets = R.buildSheets(R.findSite("chatgpt.com"), "auto");
+  assert.deepEqual(sheets.map((sheet) => sheet.origin), ["AUTHOR", "USER"]);
+  assert.match(sheets[1].css, /^li.*text-align:\s*start;/);
+  assert.doesNotMatch(sheets[1].css, /!important/);
+  assert.doesNotMatch(sheets[0].css, /\bli:not[^{]*\{\s*text-align/);
+});
+
 test("both locales define the same keys, each with a message", () => {
   const en = readJson("_locales/en/messages.json");
   const ar = readJson("_locales/ar/messages.json");
