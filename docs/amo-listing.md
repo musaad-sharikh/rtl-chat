@@ -94,7 +94,7 @@ RTL Chat تصحّح الاتجاه فقرة فقرة:
 | Licence | MIT, as in `LICENSE` |
 | Privacy policy | none: the extension itself transmits nothing; Firefox Sync is the browser's own feature |
 | Support email | `musaad.sharikh@gmail.com` |
-| Homepage | `https://github.com/musaad-sharikh/rtl-chat`, once the repository is public |
+| Homepage | `https://github.com/musaad-sharikh/rtl-chat` |
 | Support site | left blank |
 | Source code package | not needed: nothing is minified or generated |
 | Screenshots | the two in `docs/amo-screenshots/` |

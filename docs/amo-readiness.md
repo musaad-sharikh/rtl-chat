@@ -4,7 +4,8 @@ What was checked before submitting RTL Chat to addons.mozilla.org (AMO), where e
 fact came from, and what is still open. Everything was read on 2026-10-13 unless a
 section gives its own date. A test build, 0.9.0, has been signed in the unlisted
 channel and passed the restart test on 2026-10-14. The 1.0.0 package is built and the
-listing choices are made; nothing has been submitted for listing.
+listing choices are made; nothing has been submitted for listing. The repository is
+public, at `https://github.com/musaad-sharikh/rtl-chat`.
 
 ## Name, add-on URL and add-on ID
 
@@ -239,8 +240,6 @@ not capture the popup panel. The listing starts with the two above.
 - **By hand, the current build has only the re-check on Claude, and the restart test on
   the signed 0.9.0 copy of it**, which both passed. What they did not cover is in
   `docs/live-testing.md`.
-- **The repository is private.** The listing's homepage and the reviewer notes point
-  at it, so it is made public before the submission.
 - **Whether AMO accepts `rtl-chat` as the add-on URL** is known only at submission.
 - **The platform boxes in the submission form** are to be read before continuing:
   Firefox ticked, Firefox for Android not.
