@@ -1,9 +1,10 @@
 # AMO readiness
 
 What was checked before submitting RTL Chat to addons.mozilla.org (AMO), where each
-fact came from, and what is still open. Everything was read on 2026-10-13. A test
-build, 0.9.0, has been signed in the unlisted channel and passed the restart test on
-2026-10-14; nothing has been submitted for listing.
+fact came from, and what is still open. Everything was read on 2026-10-13 unless a
+section gives its own date. A test build, 0.9.0, has been signed in the unlisted
+channel and passed the restart test on 2026-10-14. The 1.0.0 package is built and the
+listing choices are made; nothing has been submitted for listing.
 
 ## Name, add-on URL and add-on ID
 
@@ -49,15 +50,21 @@ The user counts are a snapshot of that day.
 | Host access on request | `optional_host_permissions` `*://*/*`, asked for one site at a time |
 | Network requests, remote code, `eval`, `innerHTML` in `src/` | none found |
 | Summary length | 148 characters in English, 130 in Arabic |
-| Package | `web-ext-artifacts/rtl_chat-1.0.0.zip`, from `npm run build`: the manifest, `LICENSE`, two icons, two locales and the eight files of `src/`; no tests, no docs |
+| Package | `web-ext-artifacts/rtl_chat-1.0.0.zip`, from `npm run build`: the manifest, `LICENSE`, two icons, two locales and the seven files of `src/`, thirteen files in all; no tests, no docs |
 
 Each permission is one the extension uses; what for is in the reviewer notes in
 `docs/amo-listing.md`. `*://*/*` is what lets "Enable on this site" ask for a site
 nobody listed in advance, and it grants nothing until the user accepts a prompt for one
 site.
 
-The package is built from the working tree. It has to be rebuilt from the commit that
-is submitted.
+`npm run build` packages the working tree, and Git ignores `web-ext-artifacts/`. The
+package for the listing was built on 2026-10-14 with web-ext 10.7.0 from a clean tree
+at commit `0dc9aa6`, after `npm test` and `npm run lint` passed there with the results
+above. Its SHA-256 is
+`eb061c455f56e9042438c45363686b59aa00d4e1af884c6d807d5540f5ae15fe`. Each of its
+thirteen files is byte-identical to that commit, and the twelve other than
+`manifest.json` are byte-identical to the signed 0.9.0 file, whose manifest differs in
+the version number only. A later change to any packaged file means building again.
 
 What Firefox does with these permissions is in "Site access the user can change in
 Firefox" below.
@@ -140,8 +147,8 @@ What the sources state:
   higher listed version once one exists.
 - AMO accepts versions of one to four numbers, each of up to nine digits.
 
-Not found in what was read: whether the account needs two-step sign-in before it can
-submit, and whether the ID of a deleted add-on can be used again.
+Not found in what was read: whether the ID of a deleted add-on can be used again.
+Two-step sign-in is in "Listing an add-on that has an unlisted version" below.
 
 The test build is 0.9.0, so that 1.0.0 stays free for the listing. It is made outside
 the repository, from the commit under test: `git archive` of that commit into an empty
@@ -155,6 +162,38 @@ The file submitted was built that way in `~/Downloads/rtl-chat-signing/`, outsid
 repository: `rtl_chat-0.9.0.zip`, SHA-256
 `9607dd541c1ecc25e9a4284992e0207141575766bd716487bf46e01694bdace9`, with 20 of 20 unit
 tests, 106 of 106 layout checks and a clean lint on that copy.
+
+## Listing an add-on that has an unlisted version
+
+Read on 2026-10-14 from the Extension Workshop (`publish/submitting-an-add-on/`,
+`publish/signing-and-distribution-overview/`, `publish/developer-accounts/`,
+`develop/create-an-appealing-listing/`, `publish/add-on-policies/`), the add-ons server
+API documentation (`topics/api/addons.html`) and the Mozilla add-ons blog post of
+2021-03-11, "Two-factor authentication required for extension developers".
+
+What the sources state:
+
+- A version is uploaded to an existing add-on in the `listed` or the `unlisted`
+  channel, so 1.0.0 goes to the add-on that already holds 0.9.0, under the same ID.
+- A listed version needs a licence, a name, a summary and categories for each
+  application it is compatible with. A submission to an existing add-on does not take
+  these from the manifest, so they are entered on AMO.
+- The summary is limited to 250 characters, and up to two categories are chosen for
+  each platform.
+- The support email, the support site and the homepage are optional. Mozilla suggests
+  an email address as the minimum.
+- The add-on URL can be edited and must be unique.
+- The submission asks for the compatible platforms, and whether a source code package
+  is needed.
+- Screenshots are optional, with no practical limit to their number.
+- Extension developers have had to turn on two-step sign-in to log in to AMO since
+  2021-03-15; uploads made with API keys are not asked for the second step. The
+  developer-accounts page does not mention it.
+
+Not found in what was read: the Developer Hub's own steps for adding a first listed
+version to an add-on that has only unlisted ones, where in that flow the add-on URL is
+edited, and whether Firefox for Android is ticked by default. The manifest has no
+`gecko_android` key.
 
 ## Listing requirements
 
@@ -174,7 +213,7 @@ Source: Mozilla's Extension Workshop, `https://extensionworkshop.com/documentati
 AMO's extension categories: Alerts & Updates, Appearance, Bookmarks, Download
 Management, Feeds News & Blogging, Games & Entertainment, Language Support, Other,
 Photos Music & Videos, Privacy & Security, Search Tools, Shopping, Social &
-Communication, Tabs, Web Development. Appearance with Language Support is proposed: it
+Communication, Tabs, Web Development. Appearance with Language Support is chosen: it
 is what the nearest add-ons use (`ai-chat-rtl-support`, `claude-rtl-hebrew-arabic`,
 `arabic-rtl-chatgpt-gemini`).
 
@@ -192,21 +231,16 @@ logged-out visitor, so no account and no private conversation is in them:
 
 There is none from Claude. Claude answers the automated browser with a bot challenge
 and needs an account, and nothing here tries to get past either. A Claude screenshot
-has to be taken by hand. There is none of the popup either.
+has to be taken by hand. There is none of the popup either: the headless browser does
+not capture the popup panel. The listing starts with the two above.
 
 ## Open
 
-- **No screenshot of the popup.** The headless browser does not capture the popup
-  panel.
 - **By hand, the current build has only the re-check on Claude, and the restart test on
   the signed 0.9.0 copy of it**, which both passed. What they did not cover is in
   `docs/live-testing.md`.
-- **No Claude screenshot.**
-- **To be supplied by the owner:** the support email, support site and homepage for the
-  listing. The Mozilla developer account exists: 0.9.0 was submitted from it. The
-  GitHub repository is private, so it cannot serve as a public homepage or source link
-  as it stands.
-- **Android.** The plan is desktop Firefox only; which platforms the listing offers is
-  to be confirmed in the submission form.
-- **The name** keeps the word "Chat" while the extension is now general. Whether that
-  stays is the owner's call.
+- **Whether AMO accepts `rtl-chat` as the add-on URL** is known only at submission.
+- **The platform boxes in the submission form** are to be read before continuing:
+  Firefox ticked, Firefox for Android not.
+- **The submission itself** is the owner's, from the Mozilla developer account that
+  submitted 0.9.0, with the choices in `docs/amo-listing.md`.

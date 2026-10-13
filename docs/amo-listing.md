@@ -81,12 +81,16 @@ RTL Chat تصحّح الاتجاه فقرة فقرة:
 
 | Field | Value |
 |---|---|
-| Add-on URL | `rtl-chat` — proposed; AMO assigns one from the name |
-| Categories | Appearance, Language Support — proposed |
+| Distribution | "On this site": listed on AMO |
+| Platform | Firefox for desktop only; Firefox for Android left unticked |
+| Add-on URL | `rtl-chat`, if AMO accepts it; the add-on has a generated one from the test submission, to be edited |
+| Categories | Appearance, Language Support |
 | Licence | MIT, as in `LICENSE` |
 | Privacy policy | none: nothing is transmitted from the user's device |
-| Support email, support site, homepage | not decided |
-| Screenshots | `docs/amo-screenshots/` |
+| Support email | `musaad.sharikh@gmail.com` |
+| Support site, homepage | left blank |
+| Source code package | not needed: nothing is minified or generated |
+| Screenshots | the two in `docs/amo-screenshots/` |
 
 ## Notes for reviewers
 
