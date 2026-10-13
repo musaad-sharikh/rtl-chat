@@ -5,9 +5,12 @@
     <title>RTL Chat fixture</title>
     <style>
       body { width: 800px; margin: 20px; font: 16px sans-serif; }
-      /* What many chat sites do: indent lists with a physical property. */
-      ul, ol { padding-left: 30px; }
+      /* What many chat sites do: reset list padding, then indent with a physical property. */
+      ul, ol { padding: 0 0 0 30px; }
       nav { border: 1px solid #ccc; }
+      table { width: 100%; }
+      /* What sites do to header cells. */
+      #rtl-site-th { text-align: left; }
     </style>
   </head>
   <body>
@@ -18,6 +21,17 @@
       </ul>
     </nav>
 
+    <!-- A transcript built as a list, with the user's turn pushed to the right. -->
+    <ol id="transcript" aria-label="Conversation" style="list-style: none; padding: 0">
+      <li id="turn-user" style="display: flex; justify-content: flex-end">
+        <p id="turn-user-text" style="width: 300px; margin: 0">رسالة المستخدم داخل قائمة المحادثة</p>
+      </li>
+      <li id="turn-reply">
+        <p id="turn-centered" style="text-align: center">Centred inside a turn</p>
+        <ul id="turn-list"><li>عنصر داخل الرد</li></ul>
+      </li>
+    </ol>
+
     <main id="chat">
       <div class="whitespace-pre-wrap" id="user-bubble">اشرح لي الفرق بين القوائم والجداول</div>
 
@@ -25,19 +39,29 @@
       <p id="p-en">This is an English paragraph that starts on the left.</p>
       <p id="p-ar-mixed">استخدم مكتبة React لبناء الواجهة.</p>
       <p id="p-en-mixed">The word مرحبا means hello.</p>
+      <p id="p-latin-first">JavaScript هي لغة برمجة تُستخدم لبناء صفحات الويب.</p>
       <h2 id="h-ar">عنوان عربي</h2>
+      <p id="p-centered" style="text-align: center">Centred by the site</p>
 
-      <ol id="list-ar">
+      <ol id="list-ar" role="list">
         <li id="li-ar">الخطوة الأولى</li>
+        <li id="li-term">API واجهة لتبادل البيانات</li>
+        <li><p id="li-p-term">React مكتبة لبناء الواجهات</p></li>
         <li>الخطوة الثانية وفيها <code id="code-inline">npm install</code> للتثبيت
           <pre id="pre-in-list"><code>const x = "قيمة";
 console.log(x);</code></pre>
         </li>
       </ol>
 
-      <ul id="list-en">
+      <ul id="list-en" role="list">
         <li id="li-en">First step</li>
         <li>Second step</li>
+      </ul>
+
+      <!-- A list used for layout: no markers, no indent. -->
+      <ul id="list-layout" style="list-style: none; padding: 0; display: flex; gap: 8px">
+        <li>اقتراح أول</li>
+        <li>اقتراح ثانٍ</li>
       </ul>
 
       <ul id="list-own-dir" dir="ltr">
@@ -46,7 +70,13 @@ console.log(x);</code></pre>
 
       <table id="table-ar">
         <tr><th id="cell-first">الاسم</th><th id="cell-second">العمر</th></tr>
-        <tr><td>سارة</td><td>30</td></tr>
+        <tr><td>سارة</td><td id="cell-number">30</td></tr>
+        <tr><td id="cell-latin">JavaScript</td><td id="cell-centered" style="text-align: center">وسط</td></tr>
+      </table>
+
+      <table id="table-en">
+        <tr><th id="cell-en-head" style="width: 50%">Name</th><th>Age</th></tr>
+        <tr><td>Sara</td><td>30</td></tr>
       </table>
 
       <blockquote id="quote-ar">اقتباس عربي</blockquote>
@@ -54,6 +84,18 @@ console.log(x);</code></pre>
       <textarea id="composer"></textarea>
       <div id="editor" contenteditable="true"><p>نص في المحرر</p></div>
     </main>
+
+    <!-- A site whose own interface is right-to-left. -->
+    <section dir="rtl">
+      <p id="rtl-site-ar">فقرة عربية في موقع واجهته عربية.</p>
+      <p id="rtl-site-latin-first">ChatGPT ذكاء اصطناعي ويمكن أن يخطئ.</p>
+      <p id="rtl-site-en">An English paragraph on a right-to-left site.</p>
+      <ol id="rtl-site-list"><li>عنصر في قائمة جعلها الموقع من اليمين</li></ol>
+      <table id="rtl-site-table">
+        <tr><th id="rtl-site-th" style="width: 50%">الاسم</th><th>العمر</th></tr>
+      </table>
+      <textarea id="composer-in-rtl" placeholder="اكتب رسالتك"></textarea>
+    </section>
 
     <ol id="results"></ol>
 

@@ -82,11 +82,26 @@ test("manifest hosts and sites.js hosts are the same set", () => {
   assert.deepEqual(manifest.content_scripts[0].matches, manifest.host_permissions);
 });
 
-test("buildCss in auto mode isolates each paragraph and keeps code LTR", () => {
+test("detectDirection goes by the share of right-to-left letters, not the first one", () => {
+  assert.equal(R.detectDirection("هذه فقرة عربية"), "rtl");
+  assert.equal(R.detectDirection("An English paragraph"), "ltr");
+  assert.equal(R.detectDirection("JavaScript هي لغة برمجة"), "rtl");
+  assert.equal(R.detectDirection("API واجهة"), "rtl");
+  assert.equal(R.detectDirection("The word مرحبا means hello"), "ltr");
+  assert.equal(R.detectDirection("שלום עולם"), "rtl");
+  assert.equal(R.detectDirection("سلام دنیا"), "rtl");
+});
+
+test("detectDirection has no opinion on text without letters", () => {
+  for (const text of ["", "   ", "123", "12.5%", "… — !", null, undefined]) {
+    assert.equal(R.detectDirection(text), null, JSON.stringify(text));
+  }
+});
+
+test("buildCss in auto mode sets no direction of its own and keeps code LTR", () => {
   const css = R.buildCss(R.findSite("chatgpt.com"), "auto");
-  assert.match(css, /unicode-bidi:\s*plaintext/);
-  assert.match(css, /text-align:\s*start/);
   assert.doesNotMatch(css, /direction:\s*rtl/);
+  assert.doesNotMatch(css, /unicode-bidi:\s*plaintext/);
   assert.match(css, /pre[^{]*\{[^}]*direction:\s*ltr/);
 });
 
@@ -98,9 +113,12 @@ test("buildCss in rtl mode forces direction and still keeps code LTR", () => {
 
 test("buildCss carries the site's own text and exclude selectors", () => {
   const site = { id: "x", name: "X", hosts: [], text: [".bubble"], input: [], exclude: ["side-bar"] };
-  const css = R.buildCss(site, "auto");
-  assert.match(css, /\.bubble/);
-  assert.match(css, /side-bar/);
+  assert.match(R.buildCss(site, "rtl"), /\.bubble/);
+  for (const mode of ["auto", "rtl"]) assert.match(R.buildCss(site, mode), /side-bar/, mode);
+});
+
+test("buildCss leaves labelled lists alone when it forces a direction", () => {
+  assert.match(R.buildCss(R.GENERIC_SITE, "rtl"), /:is\(ul, ol\)\[aria-label\]/);
 });
 
 test("both locales define the same keys, each with a message", () => {

@@ -10,42 +10,75 @@
   const site = R.findSite(location.hostname);
 
   let currentCss = null;
+  let mode = "auto";
   let observer = null;
-  let pending = [];
+  // Nodes whose surroundings need another look, and new nodes to look inside too.
+  let touched = new Set();
+  let added = new Set();
   let scheduled = false;
+
+  // Settles one element, and everything under it when its own direction moved:
+  // what is inside was judged against the direction it used to inherit.
+  const settle = (el) => {
+    if (R.settle(el, mode)) R.applyAll(el, site, mode);
+  };
 
   const flush = () => {
     scheduled = false;
-    const nodes = pending;
-    pending = [];
-    for (const node of nodes) {
-      if (node.isConnected) R.applyAll(node, site);
+    const [around, inside] = [touched, added];
+    touched = new Set();
+    added = new Set();
+    for (const node of around) {
+      if (!node.isConnected) continue;
+      for (const el of R.targetsAround(node, site)) settle(el);
+    }
+    for (const node of inside) {
+      if (node.isConnected) R.applyAll(node, site, mode);
     }
   };
 
+  const schedule = (node, isNew = false) => {
+    touched.add(node);
+    if (isNew) added.add(node);
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(flush);
+  };
+
+  // Text arrives while a reply streams: new nodes, or more characters in a node
+  // that is already there. Either can tip the direction of what holds it.
   const onMutations = (mutations) => {
     for (const mutation of mutations) {
+      if (mutation.type === "characterData") {
+        schedule(mutation.target);
+        continue;
+      }
+      schedule(mutation.target);
       for (const node of mutation.addedNodes) {
-        if (node.nodeType === 1) pending.push(node);
+        if (node.nodeType === 1) schedule(node, true);
       }
     }
-    if (pending.length && !scheduled) {
-      scheduled = true;
-      requestAnimationFrame(flush);
-    }
+  };
+
+  // Typing in a textarea changes its value, not the DOM, so no mutation reports it.
+  const onInput = (event) => {
+    if (event.target && event.target.nodeType === 1) schedule(event.target);
   };
 
   const startObserver = () => {
     if (observer) return;
     observer = new MutationObserver(onMutations);
-    observer.observe(document.documentElement, { childList: true, subtree: true });
+    observer.observe(document.documentElement, { childList: true, characterData: true, subtree: true });
+    document.addEventListener("input", onInput, true);
   };
 
   const stopObserver = () => {
     if (!observer) return;
     observer.disconnect();
     observer = null;
-    pending = [];
+    document.removeEventListener("input", onInput, true);
+    touched = new Set();
+    added = new Set();
   };
 
   const setCss = async (css) => {
@@ -60,9 +93,11 @@
 
     await setCss(enabled ? R.buildCss(site, settings.mode) : null);
 
-    // Forced RTL is CSS only; dir="auto" is what the automatic mode adds.
-    if (enabled && settings.mode === "auto") {
-      R.applyAll(document, site);
+    if (enabled) {
+      mode = settings.mode;
+      // Forced RTL takes its directions from the stylesheet alone.
+      if (mode !== "auto") R.clearDirections(document);
+      R.applyAll(document, site, mode);
       startObserver();
     } else {
       stopObserver();
