@@ -3,13 +3,13 @@
     "message": "RTL Chat"
   },
   "extDescription": {
-    "message": "Fixes right-to-left text direction for Arabic, Persian, Hebrew and Urdu on ChatGPT, Claude and other AI chat sites."
+    "message": "Fixes text direction for Arabic, Persian, Hebrew and Urdu, paragraph by paragraph. Works on ChatGPT and Claude, and on other sites you enable it on."
   },
   "enableOnSite": {
     "message": "Enabled on this site"
   },
   "modeLegend": {
-    "message": "Direction"
+    "message": "Direction on this site"
   },
   "modeAuto": {
     "message": "Automatic"
@@ -21,7 +21,7 @@
     "message": "Always right-to-left"
   },
   "modeRtlHint": {
-    "message": "All messages right-to-left. Code stays left-to-right."
+    "message": "All text right-to-left. Code stays left-to-right."
   },
   "addSite": {
     "message": "Enable on this site"
@@ -34,6 +34,9 @@
   },
   "statusCustom": {
     "message": "Added by you."
+  },
+  "statusAllSites": {
+    "message": "Enabled for all websites, from Firefox's settings."
   },
   "statusNotCovered": {
     "message": "RTL Chat is not active on this site."

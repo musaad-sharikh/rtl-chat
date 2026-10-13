@@ -14,6 +14,14 @@ let tab = null;
 let hostname = "";
 let pattern = null;
 
+const STATUS = {
+  none: () => t("statusNotCovered"),
+  revoked: () => t("statusNoAccess"),
+  builtin: () => t("statusBuiltin"),
+  added: () => t("statusCustom"),
+  wide: () => t("statusAllSites"),
+};
+
 const readSettings = async () => R.normalizeSettings(await browser.storage.sync.get(null));
 
 const render = async () => {
@@ -31,22 +39,25 @@ const render = async () => {
   const builtin = R.builtinHosts().includes(hostname);
   const granted = await browser.permissions.contains({ origins: [pattern] });
 
+  // Only a site that holds a host permission of its own can be removed here.
+  const { origins } = await browser.permissions.getAll();
+  const own = origins.includes(pattern);
+  $("status").textContent = STATUS[R.accessKind({ builtin, granted, own })]();
+
   if (!granted) {
-    $("status").textContent = t(builtin ? "statusNoAccess" : "statusNotCovered");
     $("add").hidden = false;
     return;
   }
 
   const settings = await readSettings();
   const enabled = R.isEnabled(settings, hostname);
-  $("status").textContent = t(builtin ? "statusBuiltin" : "statusCustom");
   $("enabled").checked = enabled;
   $("modes").disabled = !enabled;
   for (const radio of document.querySelectorAll('input[name="mode"]')) {
-    radio.checked = radio.value === settings.mode;
+    radio.checked = radio.value === R.modeFor(settings, hostname);
   }
   $("controls").hidden = false;
-  $("remove").hidden = builtin;
+  $("remove").hidden = builtin || !own;
 };
 
 $("enabled").addEventListener("change", async (event) => {
@@ -58,7 +69,10 @@ $("enabled").addEventListener("change", async (event) => {
 });
 
 $("modes").addEventListener("change", async (event) => {
-  await browser.storage.sync.set({ mode: event.target.value });
+  const { modes } = await readSettings();
+  if (event.target.value === "auto") delete modes[hostname];
+  else modes[hostname] = event.target.value;
+  await browser.storage.sync.set({ modes });
 });
 
 // permissions.request only works straight from the click, so nothing is awaited
@@ -74,6 +88,16 @@ $("remove").addEventListener("click", async () => {
     // No content script in the tab: nothing to undo there.
   }
   await browser.permissions.remove({ origins: [pattern] });
+  // A site that is added again later starts from the defaults.
+  const { modes, disabled } = await readSettings();
+  delete modes[hostname];
+  await browser.storage.sync.set({ modes, disabled: disabled.filter((host) => host !== hostname) });
+  // A wider grant still covers the site: it stays at work, from the defaults.
+  if (await browser.permissions.contains({ origins: [pattern] })) {
+    await browser.scripting
+      .executeScript({ target: { tabId: tab.id }, files: R.CONTENT_FILES.map((file) => `/${file}`) })
+      .catch(console.error);
+  }
   await render();
 });
 

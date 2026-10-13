@@ -57,11 +57,13 @@ const main = async () => {
   await reload();
   console.log("field direction, removed and reloaded:", await m.run(FIELD_DIRECTION));
 
-  // The mode is one setting for every site: put it back before leaving.
+  // Removing a site forgets its settings: added again, it starts automatic.
   await p.click("#add");
   await p.answerPrompt("allow");
   await sleep(1500);
-  await p.click('input[name="mode"][value="auto"]');
+  await p.close();
+  await p.open();
+  console.log("mode after adding the site again:", (await p.state()).mode);
   await p.click("#remove");
   await sleep(800);
 

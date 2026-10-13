@@ -27,6 +27,8 @@ const store = {};
 const storageListeners = new Set();
 const messageListeners = new Set();
 const styles = new Map();
+// What the background would answer a page that asks whether the extension can reach it.
+let access = true;
 
 globalThis.browser = {
   storage: {
@@ -44,6 +46,7 @@ globalThis.browser = {
     // origin, a layer outranks the browser's stylesheet and yields to the page's
     // unlayered rules.
     sendMessage: async (message) => {
+      if (message.type === "rtl-chat:has-access") return access;
       for (const { css } of message.remove) {
         if (!styles.has(css)) throw new Error("removing a stylesheet that was never inserted");
         styles.get(css).remove();
@@ -58,6 +61,7 @@ globalThis.browser = {
     },
     onMessage: {
       addListener: (fn) => messageListeners.add(fn),
+      removeListener: (fn) => messageListeners.delete(fn),
     },
   },
 };
@@ -83,12 +87,13 @@ const run = async () => {
   check("baseline: Arabic paragraph starts on the left before the extension runs", textSide($("p-ar")) === "left");
 
   // Malformed settings must not stop the extension from starting.
-  Object.assign(store, { mode: "sideways", disabled: "nope" });
+  Object.assign(store, { modes: "sideways", disabled: "nope" });
   await loadContentScript();
   await frames(4);
 
   // Automatic mode
   check("auto: malformed settings still start the extension", styles.size === 2, `styles=${styles.size}`);
+  check("auto: the root carries the extension's attribute", document.documentElement.hasAttribute("data-rtl-chat-on"));
   check("auto: Arabic paragraph is on the right", textSide($("p-ar")) === "right");
   check("auto: English paragraph stays on the left", textSide($("p-en")) === "left");
   check("auto: paragraph starting in Arabic is on the right", textSide($("p-ar-mixed")) === "right");
@@ -208,7 +213,7 @@ const run = async () => {
   check("mixed reply: the Arabic paragraph after it is on the right", textSide(second) === "right");
 
   // Forced RTL
-  await setSettings({ mode: "rtl", disabled: [] });
+  await setSettings({ modes: { [location.hostname]: "rtl" }, disabled: [] });
   check("rtl: both stylesheets are active, and no stale one", styles.size === 2, `styles=${styles.size}`);
   check("rtl: English paragraph is rtl", direction($("p-en")) === "rtl");
   check("rtl: English paragraph text is on the right", textSide($("p-en")) === "right");
@@ -229,8 +234,9 @@ const run = async () => {
   check("rtl: the list's own dir is back", $("list-own-dir").getAttribute("dir") === "ltr");
 
   // Switched off for this site
-  await setSettings({ mode: "auto", disabled: [location.hostname] });
+  await setSettings({ modes: {}, disabled: [location.hostname] });
   check("off: no stylesheet is left", styles.size === 0, `styles=${styles.size}`);
+  check("off: the root attribute is gone", !document.documentElement.hasAttribute("data-rtl-chat-on"));
   check("off: no element is still marked", document.querySelectorAll("[data-rtl-chat], [data-rtl-chat-orig], [data-rtl-chat-indent]").length === 0);
   check("off: lists are back to the site's indent", getComputedStyle($("list-ar")).paddingLeft === "30px" && getComputedStyle($("list-en")).paddingLeft === "30px");
   check("off: Arabic paragraph is back on the left", textSide($("p-ar")) === "left");
@@ -244,18 +250,66 @@ const run = async () => {
   check("off: new content is not touched", !late.hasAttribute("dir"));
 
   // Switched back on, then stopped by the popup's "remove this site"
-  await setSettings({ mode: "auto", disabled: [] });
+  await setSettings({ modes: {}, disabled: [] });
   check("on again: Arabic list is rtl", direction($("list-ar")) === "rtl");
   check("on again: content added while off is picked up", direction(late) === "rtl");
+
+  // Another site forced right-to-left, or switched off, changes nothing here
+  await setSettings({ modes: { "other.example": "rtl" }, disabled: ["other.example"] });
+  check("other site's settings: English paragraph stays ltr", direction($("p-en")) === "ltr");
+  check("other site's settings: Arabic list is still rtl", direction($("list-ar")) === "rtl");
+  await setSettings({ modes: {}, disabled: [] });
+
+  // Access taken away outside the popup, with everything forced right-to-left: the
+  // stylesheets can no longer be removed, and must stop applying all the same.
+  await setSettings({ modes: { [location.hostname]: "rtl" }, disabled: [] });
+  document.documentElement.removeAttribute("data-rtl-chat-on");
+  $("chat").append(document.createElement("span"));
+  await frames();
+  check("a site that drops the root attribute gets it back", document.documentElement.hasAttribute("data-rtl-chat-on"));
+  access = false;
+  for (const fn of [...messageListeners]) fn({ type: "rtl-chat:access-changed" });
+  await frames(4);
+  check("access lost: the stylesheets are still inserted", styles.size === 2, `styles=${styles.size}`);
+  const stranded = new Set(styles.keys());
+  check("access lost: the root attribute is gone", !document.documentElement.hasAttribute("data-rtl-chat-on"));
+  check("access lost: forced right-to-left no longer applies", direction($("p-en")) === "ltr" && direction($("composer")) === "ltr");
+  check("access lost: no element is still marked", document.querySelectorAll("[data-rtl-chat], [data-rtl-chat-orig], [data-rtl-chat-indent]").length === 0);
+  check("access lost: the script stopped listening", messageListeners.size === 0 && storageListeners.size === 0);
+  const afterLoss = document.createElement("p");
+  afterLoss.textContent = "فقرة بعد سحب الصلاحية.";
+  $("chat").append(afterLoss);
+  await frames();
+  check("access lost: new content is not touched", !afterLoss.hasAttribute("dir"));
+
+  // A tab that still has access is told as well, and carries on.
+  access = true;
+  await loadContentScript();
+  await frames(4);
+  check("access back: forced right-to-left applies again", direction($("p-en")) === "rtl");
+  for (const fn of [...messageListeners]) fn({ type: "rtl-chat:access-changed" });
+  await frames(4);
+  check("access kept: the script carries on", direction($("p-en")) === "rtl" && messageListeners.size === 1);
+  await setSettings({ modes: {}, disabled: [] });
+  check("access back: rules left by the stopped script do not apply", direction($("p-en")) === "ltr");
+  check("access back: automatic mode works", direction($("list-ar")) === "rtl" && direction(afterLoss) === "rtl");
+  afterLoss.remove();
+
   await Promise.all([...messageListeners].map((fn) => fn({ type: "rtl-chat:stop" })));
   await frames();
-  check("stop: no stylesheet is left", styles.size === 0, `styles=${styles.size}`);
+  check("stop: no stylesheet is left but the stranded ones", styles.size === stranded.size && [...styles.keys()].every((css) => stranded.has(css)), `styles=${styles.size}`);
+  check("stop: the root attribute is gone", !document.documentElement.hasAttribute("data-rtl-chat-on"));
   check("stop: no element is still marked", document.querySelectorAll("[data-rtl-chat], [data-rtl-chat-indent]").length === 0);
 
   // Cost on a long conversation, at its worst: Arabic on a left-to-right page, where
   // every paragraph and list has to be given a direction. The bounds are loose; the
   // measured times are printed with the result.
   const R = globalThis.RTLChat;
+  // Measured the way a page really is: with the extension's stylesheets in force.
+  for (const style of styles.values()) style.remove();
+  styles.clear();
+  await browser.runtime.sendMessage({ type: "rtl-chat:css", remove: [], insert: R.buildSheets(R.GENERIC_SITE, "auto", "cost") });
+  R.setActive(document, "cost");
   const long = document.createElement("div");
   for (let i = 0; i < 2000; i++) {
     const p = document.createElement("p");
@@ -286,6 +340,7 @@ const run = async () => {
   check("cost: a streamed chunk at the end of that conversation stays under 2 ms", perChunk < 2, `${perChunk.toFixed(3)} ms per chunk`);
   R.clearAll(long);
   long.remove();
+  R.setActive(document, null);
 };
 
 const report = async (error) => {

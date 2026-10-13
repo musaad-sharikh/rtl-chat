@@ -11,23 +11,53 @@ const R = require(path.join(root, "src/direction.js"));
 
 const readJson = (file) => JSON.parse(fs.readFileSync(path.join(root, file), "utf8"));
 
-test("normalizeSettings falls back to auto mode with nothing disabled", () => {
-  const fallback = { mode: "auto", disabled: [] };
+test("normalizeSettings falls back to no site modes and nothing disabled", () => {
+  const fallback = { modes: {}, disabled: [] };
   assert.deepEqual(R.normalizeSettings(undefined), fallback);
   assert.deepEqual(R.normalizeSettings(null), fallback);
   assert.deepEqual(R.normalizeSettings({}), fallback);
-  assert.deepEqual(R.normalizeSettings({ mode: "sideways", disabled: "claude.ai" }), fallback);
-  assert.deepEqual(R.normalizeSettings({ mode: 7, disabled: [1, null, "claude.ai"] }), {
-    mode: "auto",
-    disabled: ["claude.ai"],
-  });
+  assert.deepEqual(R.normalizeSettings({ modes: "sideways", disabled: "claude.ai" }), fallback);
+  assert.deepEqual(R.normalizeSettings({ modes: ["rtl"], disabled: [] }), fallback);
+  assert.deepEqual(
+    R.normalizeSettings({ modes: { "claude.ai": "sideways", "chatgpt.com": 7 }, disabled: [1, null, "claude.ai"] }),
+    { modes: {}, disabled: ["claude.ai"] },
+  );
 });
 
 test("normalizeSettings keeps valid values", () => {
-  assert.deepEqual(R.normalizeSettings({ mode: "rtl", disabled: ["chatgpt.com"] }), {
-    mode: "rtl",
+  assert.deepEqual(R.normalizeSettings({ modes: { "claude.ai": "rtl" }, disabled: ["chatgpt.com"] }), {
+    modes: { "claude.ai": "rtl" },
     disabled: ["chatgpt.com"],
   });
+});
+
+test("modeFor gives each site its own mode, automatic unless it chose another", () => {
+  const settings = R.normalizeSettings({ modes: { "claude.ai": "rtl" } });
+  assert.equal(R.modeFor(settings, "claude.ai"), "rtl");
+  assert.equal(R.modeFor(settings, "chatgpt.com"), "auto");
+  assert.equal(R.modeFor(settings, "constructor"), "auto");
+});
+
+test("accessKind tells a site the user added from one a wider grant covers", () => {
+  assert.equal(R.accessKind({ builtin: true, granted: true, own: true }), "builtin");
+  assert.equal(R.accessKind({ builtin: true, granted: true, own: false }), "builtin");
+  assert.equal(R.accessKind({ builtin: true, granted: false, own: false }), "revoked");
+  assert.equal(R.accessKind({ builtin: false, granted: true, own: true }), "added");
+  assert.equal(R.accessKind({ builtin: false, granted: true, own: false }), "wide");
+  assert.equal(R.accessKind({ builtin: false, granted: false, own: false }), "none");
+});
+
+test("every stylesheet applies only under the root's attribute", () => {
+  for (const site of [R.findSite("chatgpt.com"), R.GENERIC_SITE]) {
+    for (const mode of ["auto", "rtl"]) {
+      for (const sheet of R.buildSheets(site, mode, "abc")) {
+        assert.ok(sheet.css.startsWith(':root[data-rtl-chat-on="abc"]'), `${site.id} ${mode} ${sheet.origin}`);
+      }
+    }
+  }
+  const [author] = R.buildSheets(R.GENERIC_SITE, "rtl", "abc");
+  assert.match(author.css, /^:root\[data-rtl-chat-on="abc"\] \{\n[\s\S]*\n\}$/);
+  assert.notEqual(author.css, R.buildSheets(R.GENERIC_SITE, "rtl", "xyz")[0].css);
 });
 
 test("isEnabled is false only for a disabled host", () => {
@@ -124,7 +154,7 @@ test("buildCss leaves labelled lists alone when it forces a direction", () => {
 test("the list-item alignment goes in under the user origin, without !important", () => {
   const sheets = R.buildSheets(R.findSite("chatgpt.com"), "auto");
   assert.deepEqual(sheets.map((sheet) => sheet.origin), ["AUTHOR", "USER"]);
-  assert.match(sheets[1].css, /^li.*text-align:\s*start;/);
+  assert.match(sheets[1].css, /^:root\[data-rtl-chat-on=""\] li.*text-align:\s*start;/);
   assert.doesNotMatch(sheets[1].css, /!important/);
   assert.doesNotMatch(sheets[0].css, /\bli:not[^{]*\{\s*text-align/);
 });

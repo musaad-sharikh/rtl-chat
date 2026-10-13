@@ -3,12 +3,20 @@
 const R = globalThis.RTLChat;
 
 const CUSTOM_SCRIPT_ID = "rtl-chat-custom";
-const CONTENT_FILES = ["src/sites.js", "src/direction.js", "src/content.js"];
+const CONTENT_FILES = R.CONTENT_FILES;
 
-// The CSS is inserted from here instead of from a <style> element in the page,
-// so a site's Content Security Policy cannot block it.
 browser.runtime.onMessage.addListener((message, sender) => {
-  if (!message || message.type !== "rtl-chat:css" || !sender.tab) return undefined;
+  if (!message || !sender.tab) return undefined;
+
+  // A content script cannot ask about permissions itself.
+  if (message.type === "rtl-chat:has-access") {
+    const pattern = R.originPattern(sender.url);
+    return pattern ? browser.permissions.contains({ origins: [pattern] }) : Promise.resolve(false);
+  }
+
+  // The CSS is inserted from here instead of from a <style> element in the page,
+  // so a site's Content Security Policy cannot block it.
+  if (message.type !== "rtl-chat:css") return undefined;
 
   const target = { tabId: sender.tab.id, frameIds: [sender.frameId] };
   return (async () => {
@@ -22,7 +30,8 @@ browser.runtime.onMessage.addListener((message, sender) => {
 });
 
 // Sites the user added are exactly the extra host permissions they granted, so one
-// registered content script follows that list.
+// registered content script follows that list. A wider grant, such as "all websites"
+// in Firefox's settings, is in that list too and is followed the same way.
 const syncCustomScript = async () => {
   const { origins } = await browser.permissions.getAll();
   const matches = R.customOrigins(origins);
@@ -45,11 +54,11 @@ const syncCustomScript = async () => {
   }
 };
 
-// A registered content script only runs on the next load; tabs already open on a
-// newly added site get it now.
+// A content script only runs on the next load; tabs already open on a site whose
+// access was just granted get it now.
 const injectIntoOpenTabs = async (origins) => {
   if (!origins || origins.length === 0) return;
-  const tabs = await browser.tabs.query({ url: origins });
+  const tabs = await browser.tabs.query({ url: origins, discarded: false });
   await Promise.allSettled(
     tabs.map((tab) =>
       browser.scripting.executeScript({ target: { tabId: tab.id }, files: CONTENT_FILES }),
@@ -57,13 +66,25 @@ const injectIntoOpenTabs = async (origins) => {
   );
 };
 
+// A page whose access was taken away keeps the script it already has, and that script
+// has no way to notice. Every tab is told, and each script asks back about its own page.
+const tellOpenTabs = async () => {
+  const tabs = await browser.tabs.query({ discarded: false });
+  await Promise.allSettled(
+    tabs.map((tab) => browser.tabs.sendMessage(tab.id, { type: "rtl-chat:access-changed" })),
+  );
+};
+
 const report = (error) => console.error("RTL Chat:", error);
 
 browser.runtime.onInstalled.addListener(() => syncCustomScript().catch(report));
 browser.runtime.onStartup.addListener(() => syncCustomScript().catch(report));
-browser.permissions.onRemoved.addListener(() => syncCustomScript().catch(report));
+browser.permissions.onRemoved.addListener(() => {
+  syncCustomScript().catch(report);
+  tellOpenTabs().catch(report);
+});
 browser.permissions.onAdded.addListener((permissions) => {
   syncCustomScript()
-    .then(() => injectIntoOpenTabs(R.customOrigins(permissions.origins)))
+    .then(() => injectIntoOpenTabs(permissions.origins))
     .catch(report);
 });

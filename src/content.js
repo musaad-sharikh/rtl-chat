@@ -8,6 +8,7 @@
 
   const R = globalThis.RTLChat;
   const site = R.findSite(location.hostname);
+  const token = Math.random().toString(36).slice(2);
 
   let currentSheets = [];
   let mode = "auto";
@@ -25,6 +26,9 @@
 
   const flush = () => {
     scheduled = false;
+    if (!observer) return;
+    // A site that rewrites its root element takes the attribute with it.
+    R.setActive(document, token);
     const [around, inside] = [touched, added];
     touched = new Set();
     added = new Set();
@@ -91,10 +95,13 @@
     const settings = R.normalizeSettings(await browser.storage.sync.get(null));
     const enabled = R.isEnabled(settings, location.hostname);
 
-    await setSheets(enabled ? R.buildSheets(site, settings.mode) : []);
+    const wanted = R.modeFor(settings, location.hostname);
+
+    await setSheets(enabled ? R.buildSheets(site, wanted, token) : []);
+    R.setActive(document, enabled ? token : null);
 
     if (enabled) {
-      mode = settings.mode;
+      mode = wanted;
       // Forced RTL takes its directions from the stylesheet alone.
       if (mode !== "auto") R.clearDirections(document);
       R.applyAll(document, site, mode);
@@ -116,19 +123,38 @@
   };
   browser.storage.onChanged.addListener(onStorageChanged);
 
-  // Sent by the popup just before it drops this site's host permission, while the
-  // background can still remove the CSS.
-  browser.runtime.onMessage.addListener((message) => {
-    if (!message || message.type !== "rtl-chat:stop") return undefined;
+  // Ends this copy of the script and hands the page back. Once the extension has lost
+  // its access to the page the background cannot remove the CSS any more; taking the
+  // attribute off the root switches those rules off instead.
+  const stop = (removeCss) => {
     browser.storage.onChanged.removeListener(onStorageChanged);
+    browser.runtime.onMessage.removeListener(onMessage);
     queue = queue.then(async () => {
       stopObserver();
       R.clearAll(document);
-      await setSheets([]);
+      R.setActive(document, null);
+      if (removeCss) await setSheets([]);
       globalThis.__rtlChatStarted = false;
     });
     return queue;
-  });
+  };
+
+  const onMessage = (message) => {
+    if (!message) return undefined;
+    // Sent by the popup just before it drops this site's host permission, while the
+    // background can still remove the CSS.
+    if (message.type === "rtl-chat:stop") return stop(true);
+    // Sent to every tab when host access was taken away somewhere, in Firefox's
+    // settings for one. Only the background can tell whether this page lost it.
+    if (message.type === "rtl-chat:access-changed") {
+      browser.runtime
+        .sendMessage({ type: "rtl-chat:has-access" })
+        .then((granted) => (granted ? undefined : stop(false)))
+        .catch((error) => console.error("RTL Chat:", error));
+    }
+    return undefined;
+  };
+  browser.runtime.onMessage.addListener(onMessage);
 
   queueRefresh();
 })();

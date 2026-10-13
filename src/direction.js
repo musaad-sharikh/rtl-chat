@@ -8,6 +8,15 @@
   const MARK = "data-rtl-chat";
   const ORIG = "data-rtl-chat-orig";
   const INDENT = "data-rtl-chat-indent";
+  // On the root element while the extension is at work on the page. Every rule it
+  // inserts hangs on it, so the rules stop applying the moment it is taken off, even
+  // where the stylesheets themselves can no longer be removed. Its value is a token of
+  // the content script that set it: rules left behind by an earlier one never match.
+  const ACTIVE = "data-rtl-chat-on";
+  const scopeFor = (token) => `:root[${ACTIVE}="${token}"]`;
+
+  // The files a page gets.
+  R.CONTENT_FILES = ["src/sites.js", "src/direction.js", "src/content.js"];
 
   // Elements whose text is one paragraph of prose: each follows its own language.
   const BLOCK = [
@@ -42,8 +51,14 @@
 
   R.normalizeSettings = (raw) => {
     const data = raw && typeof raw === "object" ? raw : {};
+    const modes = {};
+    if (data.modes && typeof data.modes === "object" && !Array.isArray(data.modes)) {
+      for (const [host, mode] of Object.entries(data.modes)) {
+        if (MODES.includes(mode)) modes[host] = mode;
+      }
+    }
     return {
-      mode: MODES.includes(data.mode) ? data.mode : "auto",
+      modes,
       disabled: Array.isArray(data.disabled)
         ? data.disabled.filter((host) => typeof host === "string")
         : [],
@@ -51,6 +66,10 @@
   };
 
   R.isEnabled = (settings, hostname) => !settings.disabled.includes(hostname);
+
+  // Each site has its own mode; a site that never chose one is automatic.
+  R.modeFor = (settings, hostname) =>
+    Object.hasOwn(settings.modes, hostname) ? settings.modes[hostname] : "auto";
 
   // Match pattern for the page's host, or null when the page cannot be scripted.
   R.originPattern = (url) => {
@@ -62,6 +81,15 @@
     }
     if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return null;
     return `${parsed.protocol}//${parsed.hostname}/*`;
+  };
+
+  // Where a site's access comes from, which is how the popup describes it. A site the
+  // user added holds a host permission of its own; "wide" is access that comes only
+  // from a wider grant, such as "all websites" in Firefox's settings.
+  R.accessKind = ({ builtin, granted, own }) => {
+    if (!granted) return builtin ? "revoked" : "none";
+    if (builtin) return "builtin";
+    return own ? "added" : "wide";
   };
 
   // Granted host permissions that are not one of the built-in sites.
@@ -104,7 +132,7 @@
     `:not(${is([...CHROME, ...site.exclude])} *):not(${is(LTR)}):not(${is(LTR)} *)`;
 
   // Rules that must win over the site's own.
-  R.buildCss = (site, mode) => {
+  R.buildCss = (site, mode, token = "") => {
     const guard = guardFor(site);
     // Sites pin header cells to the left; in a right-to-left table they belong on
     // the right. Everything else keeps the alignment the site chose, so a centred
@@ -115,27 +143,30 @@
     const listIndent = `[${INDENT}] { padding-inline: 1.75em 0 !important; }`;
     const ltr = `${is(LTR)} { direction: ltr !important; unicode-bidi: isolate !important; text-align: left !important; }`;
 
+    // Nested, so each rule applies under the root's attribute only.
+    const scoped = (rules) => `${scopeFor(token)} {\n${rules.join("\n")}\n}`;
+
     if (mode === "rtl") {
       const forced =
         is([...BLOCK, ...site.text, ...CONTAINER, ...INPUT, ...site.input]) +
         `:not(${STRUCTURAL})` +
         guard;
-      return [
+      return scoped([
         `${forced}, :is(li:not(${STRUCTURAL} > li), td, th)${guard} { direction: rtl !important; }`,
         cells,
         listIndent,
         ltr,
-      ].join("\n");
+      ]);
     }
 
-    return [
+    return scoped([
       cells,
       listIndent,
       // A field the site emptied without a keystroke shows its placeholder the way
       // the site laid it out, not the way the last message ran.
       `:is(textarea, input)[${MARK}]:placeholder-shown { direction: inherit !important; }`,
       ltr,
-    ].join("\n");
+    ]);
   };
 
   // A list item resolves its alignment against its parent (text-align: match-parent)
@@ -143,12 +174,13 @@
   // inside it to the left. This makes the item pass down "start" instead. It goes in
   // with the user origin, where it outranks the browser's stylesheet and yields to
   // every rule of the site: an item the site aligned keeps that alignment.
-  R.buildUserCss = (site) => `li${guardFor(site)} { text-align: start; }`;
+  R.buildUserCss = (site, token = "") =>
+    `${scopeFor(token)} li${guardFor(site)} { text-align: start; }`;
 
   // The stylesheets a page gets, each with the origin it is inserted under.
-  R.buildSheets = (site, mode) => [
-    { origin: "AUTHOR", css: R.buildCss(site, mode) },
-    { origin: "USER", css: R.buildUserCss(site) },
+  R.buildSheets = (site, mode, token = "") => [
+    { origin: "AUTHOR", css: R.buildCss(site, mode, token) },
+    { origin: "USER", css: R.buildUserCss(site, token) },
   ];
 
   const selectorCache = new WeakMap();
@@ -292,6 +324,13 @@
   // Takes back the directions the automatic mode set.
   R.clearDirections = (root) => {
     for (const el of root.querySelectorAll(`[${MARK}]`)) restore(el);
+  };
+
+  // Switches on the rules built with this token, or with null switches all of them off.
+  R.setActive = (doc, token) => {
+    const root = doc.documentElement;
+    if (token === null) root.removeAttribute(ACTIVE);
+    else if (root.getAttribute(ACTIVE) !== token) root.setAttribute(ACTIVE, token);
   };
 
   R.clearAll = (root) => {
