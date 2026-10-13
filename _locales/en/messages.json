@@ -1,0 +1,47 @@
+{
+  "extName": {
+    "message": "RTL Chat"
+  },
+  "extDescription": {
+    "message": "Fixes right-to-left text direction for Arabic, Persian, Hebrew and Urdu on ChatGPT, Claude, Gemini and other AI chat sites."
+  },
+  "enableOnSite": {
+    "message": "Enabled on this site"
+  },
+  "modeLegend": {
+    "message": "Direction"
+  },
+  "modeAuto": {
+    "message": "Automatic"
+  },
+  "modeAutoHint": {
+    "message": "Each paragraph follows its own language."
+  },
+  "modeRtl": {
+    "message": "Always right-to-left"
+  },
+  "modeRtlHint": {
+    "message": "All messages right-to-left. Code stays left-to-right."
+  },
+  "addSite": {
+    "message": "Enable on this site"
+  },
+  "removeSite": {
+    "message": "Remove this site"
+  },
+  "statusBuiltin": {
+    "message": "Supported site."
+  },
+  "statusCustom": {
+    "message": "Added by you."
+  },
+  "statusNotCovered": {
+    "message": "RTL Chat is not active on this site."
+  },
+  "statusNoAccess": {
+    "message": "RTL Chat has no access to this site."
+  },
+  "statusUnsupportedPage": {
+    "message": "RTL Chat cannot run on this page."
+  }
+}

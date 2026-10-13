@@ -1,0 +1,47 @@
+{
+  "extName": {
+    "message": "RTL Chat"
+  },
+  "extDescription": {
+    "message": "تصحّح اتجاه النص من اليمين لليسار للعربية والفارسية والعبرية والأردية في ChatGPT و Claude و Gemini وباقي مواقع المحادثة بالذكاء الاصطناعي."
+  },
+  "enableOnSite": {
+    "message": "مفعّلة على هذا الموقع"
+  },
+  "modeLegend": {
+    "message": "الاتجاه"
+  },
+  "modeAuto": {
+    "message": "تلقائي"
+  },
+  "modeAutoHint": {
+    "message": "كل فقرة تتبع لغتها."
+  },
+  "modeRtl": {
+    "message": "من اليمين لليسار دائماً"
+  },
+  "modeRtlHint": {
+    "message": "كل الرسائل من اليمين لليسار، والأكواد تبقى من اليسار لليمين."
+  },
+  "addSite": {
+    "message": "فعّل على هذا الموقع"
+  },
+  "removeSite": {
+    "message": "أزل هذا الموقع"
+  },
+  "statusBuiltin": {
+    "message": "موقع مدعوم."
+  },
+  "statusCustom": {
+    "message": "أضفته أنت."
+  },
+  "statusNotCovered": {
+    "message": "RTL Chat غير مفعّلة على هذا الموقع."
+  },
+  "statusNoAccess": {
+    "message": "RTL Chat لا تملك صلاحية الوصول لهذا الموقع."
+  },
+  "statusUnsupportedPage": {
+    "message": "RTL Chat لا تعمل على هذه الصفحة."
+  }
+}

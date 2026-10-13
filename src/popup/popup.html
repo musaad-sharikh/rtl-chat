@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <header>
+      <img src="../../icons/icon-48.png" alt="" width="24" height="24">
+      <h1 data-i18n="extName"></h1>
+    </header>
+
+    <p id="host" class="host" dir="ltr"></p>
+    <p id="status" class="status"></p>
+
+    <section id="controls" hidden>
+      <label class="row">
+        <span data-i18n="enableOnSite"></span>
+        <input id="enabled" type="checkbox" class="switch">
+      </label>
+
+      <fieldset id="modes">
+        <legend data-i18n="modeLegend"></legend>
+        <label class="option">
+          <input type="radio" name="mode" value="auto">
+          <span>
+            <strong data-i18n="modeAuto"></strong>
+            <small data-i18n="modeAutoHint"></small>
+          </span>
+        </label>
+        <label class="option">
+          <input type="radio" name="mode" value="rtl">
+          <span>
+            <strong data-i18n="modeRtl"></strong>
+            <small data-i18n="modeRtlHint"></small>
+          </span>
+        </label>
+      </fieldset>
+    </section>
+
+    <button id="add" type="button" class="primary" data-i18n="addSite" hidden></button>
+    <button id="remove" type="button" class="link" data-i18n="removeSite" hidden></button>
+
+    <script src="../sites.js"></script>
+    <script src="../direction.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

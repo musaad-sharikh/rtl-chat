@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>RTL Chat fixture</title>
+    <style>
+      body { width: 800px; margin: 20px; font: 16px sans-serif; }
+      /* What many chat sites do: indent lists with a physical property. */
+      ul, ol { padding-left: 30px; }
+      nav { border: 1px solid #ccc; }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <ul id="nav-list">
+        <li id="nav-item">محادثة سابقة عن الطقس</li>
+        <li>Earlier chat</li>
+      </ul>
+    </nav>
+
+    <main id="chat">
+      <div class="whitespace-pre-wrap" id="user-bubble">اشرح لي الفرق بين القوائم والجداول</div>
+
+      <p id="p-ar">هذه فقرة عربية كاملة تبدأ من اليمين.</p>
+      <p id="p-en">This is an English paragraph that starts on the left.</p>
+      <p id="p-ar-mixed">استخدم مكتبة React لبناء الواجهة.</p>
+      <p id="p-en-mixed">The word مرحبا means hello.</p>
+      <h2 id="h-ar">عنوان عربي</h2>
+
+      <ol id="list-ar">
+        <li id="li-ar">الخطوة الأولى</li>
+        <li>الخطوة الثانية وفيها <code id="code-inline">npm install</code> للتثبيت
+          <pre id="pre-in-list"><code>const x = "قيمة";
+console.log(x);</code></pre>
+        </li>
+      </ol>
+
+      <ul id="list-en">
+        <li id="li-en">First step</li>
+        <li>Second step</li>
+      </ul>
+
+      <ul id="list-own-dir" dir="ltr">
+        <li>قائمة لها اتجاه من الموقع نفسه</li>
+      </ul>
+
+      <table id="table-ar">
+        <tr><th id="cell-first">الاسم</th><th id="cell-second">العمر</th></tr>
+        <tr><td>سارة</td><td>30</td></tr>
+      </table>
+
+      <blockquote id="quote-ar">اقتباس عربي</blockquote>
+
+      <textarea id="composer"></textarea>
+      <div id="editor" contenteditable="true"><p>نص في المحرر</p></div>
+    </main>
+
+    <ol id="results"></ol>
+
+    <script src="/src/sites.js"></script>
+    <script src="/src/direction.js"></script>
+    <script src="/tests/browser/assertions.js"></script>
+  </body>
+</html>

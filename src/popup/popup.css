@@ -1,0 +1,185 @@
+:root {
+  color-scheme: light dark;
+  --fg: #15141a;
+  --muted: #5b5b66;
+  --bg: #ffffff;
+  --line: #d7d7db;
+  --accent: #0060df;
+  --accent-fg: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #fbfbfe;
+    --muted: #bfbfc9;
+    --bg: #2b2a33;
+    --line: #52525e;
+    --accent: #00ddff;
+    --accent-fg: #15141a;
+  }
+}
+
+body {
+  width: 300px;
+  margin: 0;
+  padding: 14px 16px 16px;
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.5 system-ui, sans-serif;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 16px;
+}
+
+p {
+  margin: 0;
+}
+
+.host {
+  margin-top: 10px;
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+
+/* The host is always Latin, but it sits on the popup's leading edge. */
+[dir="rtl"] .host {
+  text-align: right;
+}
+
+.status {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.switch {
+  appearance: none;
+  flex: none;
+  width: 36px;
+  height: 20px;
+  margin: 0;
+  border-radius: 10px;
+  background: var(--line);
+  position: relative;
+  cursor: pointer;
+}
+
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  inset-inline-start: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--bg);
+  transition: inset-inline-start 0.12s;
+}
+
+.switch:checked {
+  background: var(--accent);
+}
+
+.switch:checked::after {
+  inset-inline-start: 18px;
+}
+
+.switch:focus-visible,
+button:focus-visible,
+input[type="radio"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+fieldset {
+  margin: 14px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+fieldset:disabled {
+  opacity: 0.5;
+}
+
+legend {
+  padding: 0;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.option input {
+  margin: 4px 0 0;
+  accent-color: var(--accent);
+}
+
+.option span {
+  display: flex;
+  flex-direction: column;
+}
+
+.option small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.primary {
+  width: 100%;
+  margin-top: 12px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-weight: 600;
+}
+
+.link {
+  margin-top: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: underline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .switch::after {
+    transition: none;
+  }
+}
