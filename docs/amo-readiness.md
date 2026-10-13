@@ -2,8 +2,8 @@
 
 What was checked before submitting RTL Chat to addons.mozilla.org (AMO), where each
 fact came from, and what is still open. Everything was read on 2026-10-13. A test
-build, 0.9.0, has been submitted for signing in the unlisted channel; nothing has been
-submitted for listing.
+build, 0.9.0, has been signed in the unlisted channel and passed the restart test on
+2026-10-14; nothing has been submitted for listing.
 
 ## Name, add-on URL and add-on ID
 
@@ -97,7 +97,7 @@ A version number must be unique across all channels, and a listed version must b
 higher than every version signed before it. A build signed for this test therefore has
 to carry a lower number than the one meant for the listing, 1.0.0.
 
-Nothing has been signed and nothing installed.
+The second way was taken, with 0.9.0: "A signed test build" below.
 
 ## A signed test build
 
@@ -109,10 +109,16 @@ server documentation (`topics/api/auth.html`, `topics/api/addons.html`) and MDN'
 `manifest.json/version` page.
 
 Version 0.9.0 was submitted on 2026-10-13 by the owner, through the Developer Hub, for
-self-distribution: AMO's email confirms the submission and says it can be held for
-human review. The add-on ID `rtl-chat@musaad-sharikh` is now registered to the owner's
-account and the number 0.9.0 is used up. Whether the file has been signed yet is not
-known here. It has not been installed, and the restart test has not been run.
+self-distribution. AMO's email says it passed the automated screening and is
+tentatively approved, and that a person may still review it at any time and ask for
+changes. The add-on ID `rtl-chat@musaad-sharikh` is now registered to the owner's
+account and the number 0.9.0 is used up.
+
+The signed file, SHA-256
+`2352346e5dbc3b7c7ae6d1405474d87e60418cb8f1ac959ea1be3600abcaf05f`, carries Mozilla's
+AMO production signature for that ID. The owner installed it in the ordinary Firefox
+158 on 2026-10-14, where the popup opens, and the restart test passed that day: the
+result is in `docs/live-testing.md`.
 
 What the sources state:
 
@@ -190,17 +196,16 @@ has to be taken by hand. There is none of the popup either.
 
 ## Open
 
-- **A site staying enabled after Firefox restarts is not verified.** It waits for the
-  signed 0.9.0 file; the steps are test (و) in `docs/manual-test-plan.md`.
 - **No screenshot of the popup.** The headless browser does not capture the popup
   panel.
-- **By hand, the current build has only the re-check on Claude**, which passed. What
-  it did not cover is in `docs/live-testing.md`.
+- **By hand, the current build has only the re-check on Claude, and the restart test on
+  the signed 0.9.0 copy of it**, which both passed. What they did not cover is in
+  `docs/live-testing.md`.
 - **No Claude screenshot.**
-- **Unknown, to be supplied by the owner:** whether a Mozilla developer account exists
-  and what it requires to submit; the support email, support site and homepage for the
-  listing. The GitHub repository is private, so it cannot serve as a public homepage or
-  source link as it stands.
+- **To be supplied by the owner:** the support email, support site and homepage for the
+  listing. The Mozilla developer account exists: 0.9.0 was submitted from it. The
+  GitHub repository is private, so it cannot serve as a public homepage or source link
+  as it stands.
 - **Android.** The plan is desktop Firefox only; which platforms the listing offers is
   to be confirmed in the submission form.
 - **The name** keeps the word "Chat" while the extension is now general. Whether that

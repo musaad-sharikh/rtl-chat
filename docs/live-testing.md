@@ -108,6 +108,32 @@ a whole and without a step-by-step breakdown. The steps are in
 forced right-to-left, ChatGPT keeping its own mode meanwhile, a reload, and Claude's
 access taken away in `about:addons` and given back with the tab open.
 
+### Across a restart, signed 0.9.0
+
+A temporary add-on is removed when Firefox closes, so this one check needs a signed
+build. The owner ran it on 2026-10-14 with the 0.9.0 file signed by AMO, installed in
+the ordinary Firefox 158. The signed package was compared file by file with commit
+`62561ae`: it holds the same set of files a build takes from that commit, the twelve
+other than `manifest.json` are byte-identical, and the manifest holds the same values
+apart from the version number, laid out with one array item per line.
+
+Before the restart: `en.wikipedia.org` enabled from the popup and set to "Always
+right-to-left", and one built-in site switched off. Firefox was then quit completely
+and started again. The owner reported each point by name as passing:
+
+| After the restart | Result |
+|---|---|
+| The added site is still enabled | yes |
+| It is still on "Always right-to-left" | yes |
+| The direction is applied on the page before the popup is opened | yes |
+| The built-in site that was switched off is still off | yes |
+| A site never enabled is left alone | yes |
+| The popup opens and works | yes |
+
+Which built-in site was switched off was not reported. Read from the profile after the
+restart: the add-on at 0.9.0, active, signed, not temporary, with
+`https://en.wikipedia.org/*` among its granted hosts.
+
 Not repeated by hand on the current build: anything on ChatGPT beyond the popup showing
 its own mode, a long existing conversation on Claude, and the one-time tests. Never
 done by hand: the "all websites" switch, and a site added by hand losing its access
@@ -128,11 +154,9 @@ still has access to the page. They match nothing once the script has taken its
 attribute off the root, which is what "stopped" above measures. A tab Firefox has
 unloaded is not told, and needs nothing: it loads again without the script.
 
-Whether an added site is still enabled after Firefox restarts is not checked. The
-extension keeps such a site as a host permission and a registered content script, and
-both are meant to outlive a restart, but a temporary add-on is removed when Firefox
-closes, so neither these checks nor the manual plan can show it. It takes a signed
-build, or a Firefox that installs unsigned add-ons.
+Whether an added site is still enabled after Firefox restarts is not checked by
+automation: the test browser loads a temporary add-on, which is removed when Firefox
+closes. It was checked by hand on a signed build, as "Across a restart" above.
 
 Not checked by automation on any site, only by hand: typing English into the composer,
 reloading a conversation, a long existing conversation, and the look of anything a
