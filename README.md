@@ -52,7 +52,8 @@ measure where the text ends up. A Flatpak Firefox is used when one is installed;
 `FIREFOX` to use a specific binary.
 
 `tests/live/` checks the extension against the real sites; `docs/live-testing.md` says
-how, and what has and has not been checked.
+how, and what has and has not been checked. `docs/manual-test-plan.md` is the test a
+person runs, signed in, on all ten sites.
 
 `src/sites.js` is the only file that knows site hosts and site-specific selectors. The
 hosts there must match `host_permissions` in `manifest.json`; a unit test checks it.
