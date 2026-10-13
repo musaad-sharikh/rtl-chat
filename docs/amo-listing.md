@@ -39,7 +39,10 @@ on ChatGPT and Claude and does not claim to work on every site.
 Prefer everything right-to-left on a site? Switch it to "Always right-to-left" in the
 popup. Each site keeps its own choice, and each can be switched off on its own.
 
-Privacy: RTL Chat makes no network requests and collects no data.
+Privacy: RTL Chat itself makes no network requests and collects no data. Its settings
+are the names of the sites you switched it off on or set to "Always right-to-left".
+They are kept in Firefox's sync storage: when Firefox Sync is on with add-ons
+included, Firefox may synchronize them between your own browsers through Mozilla.
 
 ## العربية
 
@@ -75,7 +78,10 @@ RTL Chat تصحّح الاتجاه فقرة فقرة:
 تفضّل كل شيء من اليمين لليسار في موقع معيّن؟ اختر له "من اليمين لليسار دائماً" من نافذة
 الإضافة. كل موقع يحتفظ باختياره، وتقدر توقف الإضافة على أي موقع لوحده.
 
-الخصوصية: RTL Chat لا ترسل أي طلبات عبر الشبكة ولا تجمع أي بيانات.
+الخصوصية: RTL Chat نفسها لا ترسل أي طلبات عبر الشبكة ولا تجمع أي بيانات. إعداداتها هي
+أسماء المواقع التي أوقفتها عليها أو اخترت لها "من اليمين لليسار دائماً"، وتُحفظ في تخزين
+المزامنة في فايرفوكس: إذا كانت مزامنة فايرفوكس (Firefox Sync) مفعّلة وتشمل الإضافات،
+فقد يزامنها فايرفوكس بين متصفحاتك عبر موزيلا.
 
 ## Listing form
 
@@ -86,15 +92,17 @@ RTL Chat تصحّح الاتجاه فقرة فقرة:
 | Add-on URL | `rtl-chat`, if AMO accepts it; the add-on has a generated one from the test submission, to be edited |
 | Categories | Appearance, Language Support |
 | Licence | MIT, as in `LICENSE` |
-| Privacy policy | none: nothing is transmitted from the user's device |
+| Privacy policy | none: the extension itself transmits nothing; Firefox Sync is the browser's own feature |
 | Support email | `musaad.sharikh@gmail.com` |
-| Support site, homepage | left blank |
+| Homepage | `https://github.com/musaad-sharikh/rtl-chat`, once the repository is public |
+| Support site | left blank |
 | Source code package | not needed: nothing is minified or generated |
 | Screenshots | the two in `docs/amo-screenshots/` |
 
 ## Notes for reviewers
 
-- No build step, no dependencies, nothing minified: the package is the source.
+- No build step, no dependencies, nothing minified: the package is the source. The
+  repository is `https://github.com/musaad-sharikh/rtl-chat`.
 - `host_permissions` covers the two sites that work from the start. Every other site
   is asked for one at a time, from a click on "Enable on this site" in the popup, out of
   `optional_host_permissions`. If the user switches on "all websites" on the

@@ -37,8 +37,13 @@ popup.
 
 ## Privacy
 
-The extension makes no network requests and collects nothing. Its settings live in
-Firefox's own sync storage.
+RTL Chat itself makes no network requests and collects nothing.
+
+Its settings are site names: the sites you switched it off on, and the sites you set
+to "Always right-to-left". They are kept in Firefox's sync storage. When Firefox Sync
+is on with **Add-ons** selected, Firefox may synchronize them between your own
+browsers through Mozilla, under your Mozilla account. With Sync off they stay in this
+browser.
 
 ## Trying it
 
@@ -68,6 +73,17 @@ person runs, signed in, on both sites.
 `src/sites.js` is the only file that knows site hosts and site-specific selectors. The
 hosts there must match `host_permissions` in `manifest.json`; a unit test checks it.
 
+## Reporting a problem and contributing
+
+Problems and suggestions go to the
+[issue tracker](https://github.com/musaad-sharikh/rtl-chat/issues): say which site,
+which Firefox version and which direction mode. [CONTRIBUTING](.github/CONTRIBUTING.md)
+has what a report and a pull request need, and [SECURITY](.github/SECURITY.md) how to
+report a security problem privately.
+
 ## Licence
 
 MIT — see [LICENSE](LICENSE).
+
+The screenshots in `docs/amo-screenshots/` show ChatGPT's interface, which belongs to
+its owner. They are not covered by the MIT licence.

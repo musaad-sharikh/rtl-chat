@@ -239,6 +239,8 @@ not capture the popup panel. The listing starts with the two above.
 - **By hand, the current build has only the re-check on Claude, and the restart test on
   the signed 0.9.0 copy of it**, which both passed. What they did not cover is in
   `docs/live-testing.md`.
+- **The repository is private.** The listing's homepage and the reviewer notes point
+  at it, so it is made public before the submission.
 - **Whether AMO accepts `rtl-chat` as the add-on URL** is known only at submission.
 - **The platform boxes in the submission form** are to be read before continuing:
   Firefox ticked, Firefox for Android not.
