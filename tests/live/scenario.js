@@ -3,7 +3,7 @@
 // Sends a test prompt on one real site, measures the reply, then drives the real
 // popup through off, on and forced right-to-left, measuring again each time.
 //
-//   node tests/live/scenario.js chatgpt|gemini|perplexity
+//   node tests/live/scenario.js chatgpt
 //
 // SKIP_SEND=1 measures the conversation already on screen. WAIT sets how long to
 // wait for the reply, in milliseconds.
@@ -21,8 +21,6 @@ const PROMPT =
 // scope: what holds the messages. chrome: site UI that must not move.
 const SITES = {
   chatgpt: { url: "https://chatgpt.com/", composer: "textarea", button: true, scope: "main li[data-message-role]", chrome: "aside p, aside a, nav a" },
-  gemini: { url: "https://gemini.google.com/app", composer: ".ql-editor", scope: "user-query, message-content", chrome: "bard-sidenav li, bard-sidenav a" },
-  perplexity: { url: "https://www.perplexity.ai/", composer: "#ask-input", scope: "main", chrome: "nav a, aside a" },
 };
 
 // One line per text element: tag, language of its text, computed direction, and the

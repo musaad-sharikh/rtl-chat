@@ -12,8 +12,7 @@ left-to-right, and the site's own navigation is left alone.
 
 ## Sites
 
-Works out of the box on ChatGPT, Claude, Gemini, Google AI Studio, Copilot, DeepSeek,
-Perplexity, Grok, Le Chat and Poe.
+Works out of the box on ChatGPT and Claude.
 
 On any other site, open the popup and choose **Enable on this site**. Firefox asks for
 access to that one site; **Remove this site** gives it back.
@@ -53,7 +52,7 @@ measure where the text ends up. A Flatpak Firefox is used when one is installed;
 
 `tests/live/` checks the extension against the real sites; `docs/live-testing.md` says
 how, and what has and has not been checked. `docs/manual-test-plan.md` is the test a
-person runs, signed in, on all ten sites.
+person runs, signed in, on both sites.
 
 `src/sites.js` is the only file that knows site hosts and site-specific selectors. The
 hosts there must match `host_permissions` in `manifest.json`; a unit test checks it.

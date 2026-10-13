@@ -3,7 +3,7 @@
     "message": "RTL Chat"
   },
   "extDescription": {
-    "message": "Fixes right-to-left text direction for Arabic, Persian, Hebrew and Urdu on ChatGPT, Claude, Gemini and other AI chat sites."
+    "message": "Fixes right-to-left text direction for Arabic, Persian, Hebrew and Urdu on ChatGPT, Claude and other AI chat sites."
   },
   "enableOnSite": {
     "message": "Enabled on this site"

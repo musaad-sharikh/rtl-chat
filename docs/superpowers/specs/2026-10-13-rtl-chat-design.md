@@ -5,7 +5,7 @@
 
 ## الهدف
 
-المستخدم يكتب ويقرأ بالعربي في ChatGPT و Claude و Gemini وغيرها، والمواقع تعرض
+المستخدم يكتب ويقرأ بالعربي في ChatGPT و Claude وغيرها، والمواقع تعرض
 الفقرات العربية بمحاذاة اليسار، وتضع نقاط القوائم والترقيم في الجهة الخطأ، وتبدأ
 خانة الكتابة من اليسار. الإضافة تصلّح هذا في كل المواقع المدعومة من مكان واحد.
 
@@ -53,14 +53,6 @@ RTL، وجملة إنجليزية فيها كلمة عربية تبقى LTR. ا�
 |---|---|
 | ChatGPT | `chatgpt.com` |
 | Claude | `claude.ai` |
-| Gemini | `gemini.google.com` |
-| AI Studio | `aistudio.google.com` |
-| Copilot | `copilot.microsoft.com`, `copilot.com` |
-| DeepSeek | `chat.deepseek.com` |
-| Perplexity | `www.perplexity.ai` |
-| Grok | `grok.com` |
-| Mistral | `chat.mistral.ai` |
-| Poe | `poe.com` |
 
 أي موقع آخر: زر "فعّل على هذا الموقع" في النافذة المنبثقة يطلب إذن ذلك النطاق فقط
 (`permissions.request`) ويطبّق القواعد العامة عليه. "أزل هذا الموقع" يسحب الإذن.
@@ -123,7 +115,7 @@ MutationObserver واحد على الصفحة يتابع العقد المضاف
 - `strict_min_version` هو `142.0`، أول إصدار يقبله `web-ext lint` مع مفتاح
   `data_collection_permissions` بدون تحذير.
 - أقل أذونات ممكنة: `storage`, `scripting`, `activeTab`، و `host_permissions`
-  للمواقع العشرة فقط، و `optional_host_permissions` للباقي. لا `tabs`.
+  للموقعين فقط، و `optional_host_permissions` للباقي. لا `tabs`.
 - لا كود خارجي ولا طلبات شبكة.
 - أيقونات 48 و 96، وصف عربي وإنجليزي في `docs/amo-listing.md`.
 - سطح المكتب فقط. لا يوجد مفتاح `gecko_android`.
@@ -139,7 +131,7 @@ MutationObserver واحد على الصفحة يتابع العقد المضاف
 - `tests/live/`: فحوص على المواقع الحقيقية داخل فايرفوكس headless والإضافة مثبتة
   فيه، مع النافذة المنبثقة الفعلية ونافذة الأذونات. طريقتها وما غطّته في
   `docs/live-testing.md`.
-- `docs/manual-test-plan.md`: الاختبار اليدوي بحساب مسجّل على المواقع العشرة. الإضافة
+- `docs/manual-test-plan.md`: الاختبار اليدوي بحساب مسجّل على الموقعين. الإضافة
   لا تُعتبر جاهزة للنشر قبل تنفيذه.
 
 ## خارج النطاق

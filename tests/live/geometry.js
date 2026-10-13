@@ -4,7 +4,7 @@
 // the extension switched off and on. Anything that differs on a page with no
 // conversation is the extension disturbing the site's own design.
 //
-//   node tests/live/geometry.js "en-US,en" https://chatgpt.com/ https://grok.com/
+//   node tests/live/geometry.js "en-US,en" https://chatgpt.com/
 //
 // The first argument is the language list the browser sends, so a site can be checked
 // with its interface in Arabic ("ar,en-US,en"). Animated elements differ on their own;

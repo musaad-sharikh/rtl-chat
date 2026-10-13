@@ -11,16 +11,7 @@
   "permissions": ["storage", "scripting", "activeTab"],
   "host_permissions": [
     "https://chatgpt.com/*",
-    "https://claude.ai/*",
-    "https://gemini.google.com/*",
-    "https://aistudio.google.com/*",
-    "https://copilot.microsoft.com/*",
-    "https://copilot.com/*",
-    "https://chat.deepseek.com/*",
-    "https://www.perplexity.ai/*",
-    "https://grok.com/*",
-    "https://chat.mistral.ai/*",
-    "https://poe.com/*"
+    "https://claude.ai/*"
   ],
   "optional_host_permissions": ["*://*/*"],
   "background": {
@@ -38,16 +29,7 @@
     {
       "matches": [
         "https://chatgpt.com/*",
-        "https://claude.ai/*",
-        "https://gemini.google.com/*",
-        "https://aistudio.google.com/*",
-        "https://copilot.microsoft.com/*",
-        "https://copilot.com/*",
-        "https://chat.deepseek.com/*",
-        "https://www.perplexity.ai/*",
-        "https://grok.com/*",
-        "https://chat.mistral.ai/*",
-        "https://poe.com/*"
+        "https://claude.ai/*"
       ],
       "js": ["src/sites.js", "src/direction.js", "src/content.js"],
       "run_at": "document_idle"

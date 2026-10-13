@@ -38,15 +38,15 @@ test("isEnabled is false only for a disabled host", () => {
 
 test("findSite matches a host, a subdomain, and falls back to the generic site", () => {
   assert.equal(R.findSite("chatgpt.com").id, "chatgpt");
-  assert.equal(R.findSite("gemini.google.com").id, "gemini");
-  assert.equal(R.findSite("www.perplexity.ai").id, "perplexity");
+  assert.equal(R.findSite("claude.ai").id, "claude");
+  assert.equal(R.findSite("www.claude.ai").id, "claude");
   assert.equal(R.findSite("example.com"), R.GENERIC_SITE);
   assert.equal(R.findSite("notchatgpt.com"), R.GENERIC_SITE);
   assert.equal(R.findSite("google.com"), R.GENERIC_SITE);
 });
 
-test("there are ten built-in sites and each has the full shape", () => {
-  assert.equal(R.SITES.length, 10);
+test("there are two built-in sites and each has the full shape", () => {
+  assert.equal(R.SITES.length, 2);
   for (const site of R.SITES) {
     assert.equal(typeof site.id, "string");
     assert.equal(typeof site.name, "string");
