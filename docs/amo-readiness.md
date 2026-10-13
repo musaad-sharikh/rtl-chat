@@ -1,8 +1,9 @@
 # AMO readiness
 
 What was checked before submitting RTL Chat to addons.mozilla.org (AMO), where each
-fact came from, and what is still open. Everything was read on 2026-10-13. Nothing has
-been submitted.
+fact came from, and what is still open. Everything was read on 2026-10-13. A test
+build, 0.9.0, has been submitted for signing in the unlisted channel; nothing has been
+submitted for listing.
 
 ## Name, add-on URL and add-on ID
 
@@ -98,6 +99,57 @@ to carry a lower number than the one meant for the listing, 1.0.0.
 
 Nothing has been signed and nothing installed.
 
+## A signed test build
+
+Read on 2026-10-13 from the Extension Workshop (`publish/developer-accounts/`,
+`develop/getting-started-with-web-ext/`, `develop/web-ext-command-reference/`,
+`develop/extensions-and-the-add-on-id/`, `publish/install-self-distributed/`,
+`publish/distribute-pre-release-versions/`, `publish/self-distribution/`), the add-ons
+server documentation (`topics/api/auth.html`, `topics/api/addons.html`) and MDN's
+`manifest.json/version` page.
+
+Version 0.9.0 was submitted on 2026-10-13 by the owner, through the Developer Hub, for
+self-distribution: AMO's email confirms the submission and says it can be held for
+human review. The add-on ID `rtl-chat@musaad-sharikh` is now registered to the owner's
+account and the number 0.9.0 is used up. Whether the file has been signed yet is not
+known here. It has not been installed, and the restart test has not been run.
+
+What the sources state:
+
+- A developer account is a Mozilla account. AMO refuses submissions from accounts on a
+  disposable email address.
+- A Manifest V3 extension must carry its ID in the manifest before it is submitted, and
+  AMO checks that the ID is unique.
+- An extension is signed for self-distribution either by uploading it in the Developer
+  Hub and choosing "On your own", or with `web-ext sign --channel unlisted`, which
+  downloads the signed copy. The second needs API credentials, a JWT issuer and a JWT
+  secret, from AMO's credentials page; `web-ext` reads them from `WEB_EXT_API_KEY` and
+  `WEB_EXT_API_SECRET`. The first needs none.
+- The credentials act for the whole account, and are never to be committed or shared.
+- Every submission is validated automatically before it is signed, falls under the
+  add-on policies and the distribution agreement, and can be reviewed by hand at any
+  time afterwards.
+- A signed file is installed from `about:addons`, "Install Add-on From File".
+- A self-distributed copy with no `update_url` in its manifest is moved by Firefox to a
+  higher listed version once one exists.
+- AMO accepts versions of one to four numbers, each of up to nine digits.
+
+Not found in what was read: whether the account needs two-step sign-in before it can
+submit, and whether the ID of a deleted add-on can be used again.
+
+The test build is 0.9.0, so that 1.0.0 stays free for the listing. It is made outside
+the repository, from the commit under test: `git archive` of that commit into an empty
+folder, the version line of that copy's `manifest.json` changed, then `npm test`,
+`npm run lint` and `npm run build` there. Rehearsed on commit `0e4f5e1`: the copy
+differs from the commit in that one line, the tests and the lint pass, and the package
+holds the same files as the 1.0.0 one. The repository and its working tree are not
+touched.
+
+The file submitted was built that way in `~/Downloads/rtl-chat-signing/`, outside the
+repository: `rtl_chat-0.9.0.zip`, SHA-256
+`9607dd541c1ecc25e9a4284992e0207141575766bd716487bf46e01694bdace9`, with 20 of 20 unit
+tests, 106 of 106 layout checks and a clean lint on that copy.
+
 ## Listing requirements
 
 Source: Mozilla's Extension Workshop, `https://extensionworkshop.com/documentation/`:
@@ -138,8 +190,8 @@ has to be taken by hand. There is none of the popup either.
 
 ## Open
 
-- **A site staying enabled after Firefox restarts is not verified.** The two ways to
-  test it are above; which one is the owner's call.
+- **A site staying enabled after Firefox restarts is not verified.** It waits for the
+  signed 0.9.0 file; the steps are test (و) in `docs/manual-test-plan.md`.
 - **No screenshot of the popup.** The headless browser does not capture the popup
   panel.
 - **By hand, the current build has only the re-check on Claude**, which passed. What
