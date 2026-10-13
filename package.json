@@ -8,6 +8,7 @@
     "test": "node --test tests/unit.test.js && node tests/browser/run.js",
     "test:unit": "node --test tests/unit.test.js",
     "test:browser": "node tests/browser/run.js",
+    "live:start": "node tests/live/start.js",
     "lint": "npx --yes web-ext lint",
     "build": "npx --yes web-ext build --overwrite-dest"
   },

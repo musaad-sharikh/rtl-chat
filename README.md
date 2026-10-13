@@ -5,9 +5,10 @@ on AI chat sites.
 
 Chat sites lay everything out left-to-right: Arabic paragraphs hug the left edge, list
 numbers sit on the wrong side, and the composer starts from the left. RTL Chat fixes
-that per paragraph, so an Arabic paragraph goes right-to-left and an English one in the
-same reply stays as it is. Code and math always stay left-to-right, and the site's own
-navigation is left alone.
+that per paragraph, by the language most of the paragraph is written in: an Arabic
+paragraph goes right-to-left even when it opens with a word like "JavaScript", and an
+English one in the same reply stays left-to-right. Code and math always stay
+left-to-right, and the site's own navigation is left alone.
 
 ## Sites
 
@@ -19,7 +20,7 @@ access to that one site; **Remove this site** gives it back.
 
 ## Modes
 
-- **Automatic** — each paragraph, list and table follows its own first letter.
+- **Automatic** — each paragraph, list and table follows the language it is written in.
 - **Always right-to-left** — every message is right-to-left whatever its language.
 
 Each site can be switched off from the popup.
@@ -49,6 +50,9 @@ npm run build     # zip for AMO in web-ext-artifacts/
 The layout checks run the real content script against `tests/browser/fixture.html` and
 measure where the text ends up. A Flatpak Firefox is used when one is installed; set
 `FIREFOX` to use a specific binary.
+
+`tests/live/` checks the extension against the real sites; `docs/live-testing.md` says
+how, and what has and has not been checked.
 
 `src/sites.js` is the only file that knows site hosts and site-specific selectors. The
 hosts there must match `host_permissions` in `manifest.json`; a unit test checks it.
