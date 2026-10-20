@@ -182,3 +182,114 @@ test("every string the popup and the manifest reference exists", () => {
   assert.ok(keys.size > 0);
   for (const key of keys) assert.ok(en[key], `missing message: ${key}`);
 });
+
+test("the content script files are the same list everywhere they are given", () => {
+  const manifest = readJson("manifest.json");
+  assert.deepEqual(manifest.content_scripts[0].js, R.CONTENT_FILES);
+  // The background and the popup need sites.js and direction.js, in that order, first.
+  assert.deepEqual(manifest.background.scripts.slice(0, 2), R.CONTENT_FILES.slice(0, 2));
+  const html = fs.readFileSync(path.join(root, "src/popup/popup.html"), "utf8");
+  const scripts = [...html.matchAll(/<script src="([^"]+)"/g)].map((m) => path.posix.join("src/popup", m[1]));
+  assert.deepEqual(scripts.slice(0, 2), R.CONTENT_FILES.slice(0, 2));
+});
+
+// background.js, loaded the way Firefox loads it, against a stand-in for the APIs it uses.
+const loadBackground = (granted) => {
+  const vm = require("node:vm");
+  const listeners = {};
+  const on = (name) => ({ addListener: (fn) => (listeners[name] = fn) });
+  const calls = [];
+  // Values from the script's own realm, made comparable with deepEqual.
+  const plain = (value) => JSON.parse(JSON.stringify(value));
+  const record = (entry) => calls.push(plain(entry));
+  let registered = [];
+  const browser = {
+    runtime: { onMessage: on("message"), onInstalled: on("installed"), onStartup: on("startup") },
+    permissions: {
+      onAdded: on("added"),
+      onRemoved: on("removed"),
+      getAll: async () => ({ origins: [...granted.origins] }),
+      contains: async ({ origins }) => origins.every((o) => granted.origins.includes(o)),
+    },
+    scripting: {
+      getRegisteredContentScripts: async ({ ids }) => registered.filter((s) => ids.includes(s.id)),
+      registerContentScripts: async (scripts) => {
+        record(["register", scripts]);
+        registered = plain(scripts);
+      },
+      updateContentScripts: async (scripts) => {
+        record(["update", scripts]);
+        registered = plain(scripts);
+      },
+      unregisterContentScripts: async ({ ids }) => {
+        record(["unregister", ids]);
+        registered = registered.filter((s) => !ids.includes(s.id));
+      },
+      insertCSS: async (details) => record(["insertCSS", details]),
+      removeCSS: async (details) => record(["removeCSS", details]),
+      executeScript: async (details) => record(["executeScript", details]),
+    },
+    tabs: {
+      query: async () => [{ id: 7 }],
+      sendMessage: async (tabId, message) => record(["sendMessage", tabId, message]),
+    },
+  };
+  const context = vm.createContext({ browser, console, URL });
+  for (const file of readJson("manifest.json").background.scripts) {
+    vm.runInContext(fs.readFileSync(path.join(root, file), "utf8"), context, { filename: file });
+  }
+  const settled = () => new Promise((resolve) => setTimeout(resolve, 0));
+  return { listeners, calls, settled, registered: () => registered };
+};
+
+test("background keeps one content script registered on the sites the user added", async () => {
+  const manifest = readJson("manifest.json");
+  const granted = { origins: [...manifest.host_permissions] };
+  const bg = loadBackground(granted);
+
+  bg.listeners.installed();
+  await bg.settled();
+  assert.deepEqual(bg.calls, [], "nothing to register for the built-in sites alone");
+
+  granted.origins.push("https://example.com/*");
+  bg.listeners.added({ origins: ["https://example.com/*"] });
+  await bg.settled();
+  assert.equal(bg.registered().length, 1);
+  assert.deepEqual(bg.registered()[0].matches, ["https://example.com/*"]);
+  assert.deepEqual(bg.registered()[0].js, R.CONTENT_FILES);
+  assert.ok(bg.calls.some(([kind, d]) => kind === "executeScript" && d.target.tabId === 7), "open tabs get the script");
+
+  granted.origins.push("*://*/*");
+  bg.listeners.added({ origins: ["*://*/*"] });
+  await bg.settled();
+  assert.deepEqual(bg.registered()[0].matches, ["https://example.com/*", "*://*/*"]);
+  assert.ok(bg.calls.some(([kind]) => kind === "update"));
+
+  granted.origins = [...manifest.host_permissions];
+  bg.listeners.removed({ origins: ["https://example.com/*", "*://*/*"] });
+  await bg.settled();
+  assert.deepEqual(bg.registered(), []);
+  assert.ok(bg.calls.some(([kind, tabId, m]) => kind === "sendMessage" && tabId === 7 && m.type === "rtl-chat:access-changed"));
+});
+
+test("background answers only content scripts, and inserts CSS into the frame that asked", async () => {
+  const bg = loadBackground({ origins: ["https://chatgpt.com/*"] });
+  const onMessage = bg.listeners.message;
+  const css = { type: "rtl-chat:css", remove: [{ css: "a{}", origin: "AUTHOR" }], insert: [{ css: "b{}", origin: "USER" }] };
+
+  assert.equal(onMessage(css, {}), undefined, "a sender without a tab is ignored");
+  assert.equal(onMessage(null, { tab: { id: 1 } }), undefined);
+  assert.equal(onMessage({ type: "other" }, { tab: { id: 1 } }), undefined);
+
+  await onMessage(css, { tab: { id: 3 }, frameId: 0 });
+  const target = { tabId: 3, frameIds: [0] };
+  assert.deepEqual(bg.calls, [
+    ["removeCSS", { target, css: "a{}", origin: "AUTHOR" }],
+    ["insertCSS", { target, css: "b{}", origin: "USER" }],
+  ]);
+
+  const ask = { type: "rtl-chat:has-access" };
+  assert.equal(await onMessage(ask, { tab: { id: 3 }, url: "https://chatgpt.com/c/1" }), true);
+  assert.equal(await onMessage(ask, { tab: { id: 3 }, url: "https://example.com/" }), false);
+  assert.equal(await onMessage(ask, { tab: { id: 3 }, url: "about:blank" }), false);
+});
