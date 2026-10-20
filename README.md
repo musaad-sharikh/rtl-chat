@@ -59,7 +59,7 @@ No dependencies and no build step. Needs Node.js and Firefox 142 or later.
 ```sh
 npm test          # unit tests, then layout checks in headless Firefox
 npm run lint      # web-ext lint
-npm run build     # zip for AMO in web-ext-artifacts/
+npm run build     # zip for AMO in web-ext-artifacts/; refuses to replace one already there
 ```
 
 The layout checks run the real content script against `tests/browser/fixture.html` and

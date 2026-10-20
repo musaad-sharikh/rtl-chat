@@ -10,7 +10,7 @@
     "test:browser": "node tests/browser/run.js",
     "live:start": "node tests/live/start.js",
     "lint": "npx --yes web-ext lint",
-    "build": "npx --yes web-ext build --overwrite-dest"
+    "build": "npx --yes web-ext build"
   },
   "webExt": {
     "ignoreFiles": [
